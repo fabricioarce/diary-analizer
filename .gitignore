@@ -8,10 +8,17 @@ __pycache__/
 venv/
 ENV/
 
-# Datos personales
+# Datos personales - IMPORTANTE
 diarios/
 *.md
 diario.json
+diario_chunks.json
+
+# Futuros archivos (embeddings)
+diario_vectors.db
+diario_chunks_embedded.json
+*.index
+*.faiss
 
 # IDE
 .vscode/

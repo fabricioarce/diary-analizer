@@ -1,8 +1,8 @@
 """
-Analizador de Diario Personal con Chunking Inteligente por LLM
----------------------------------------------------------------
-Script para analizar entradas de diario usando LM Studio.
-Usa el modelo de lenguaje para dividir inteligentemente el texto en chunks semánticos.
+Analizador de Diario Personal con Chunking Semántico
+------------------------------------------------------
+Script para analizar entradas de diario usando LM Studio y extraer información estructurada.
+Incluye sistema de chunking semántico para preparar datos para embeddings futuros.
 
 Uso:
     python diary_analyzer.py
@@ -15,9 +15,9 @@ Requisitos:
 import re
 import json
 import logging
-import time
+import hashlib
 from pathlib import Path
-from typing import Dict, Optional, Any, List, Set
+from typing import Dict, Optional, Any, List, Set, Tuple
 from datetime import datetime
 import lmstudio as lms
 
@@ -28,43 +28,6 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
-# Prompt para chunking semántico con LLM
-PROMPT_CHUNKING = """INSTRUCCIONES:
-Divide el texto del diario en fragmentos semánticos coherentes.
-
-REGLAS IMPORTANTES:
-1. Cada fragmento debe representar UNA idea completa
-2. NO repitas texto entre fragmentos
-3. NO resumas - conserva el texto original EXACTAMENTE como está
-4. Si un párrafo tiene múltiples ideas distintas, divídelo
-5. Si varios párrafos hablan de lo mismo, pueden ir juntos
-6. Mínimo 50 palabras por fragmento (excepto si es una idea muy corta)
-7. Máximo 300 palabras por fragmento
-
-TIPOS DE FRAGMENTOS:
-- "hechos": Eventos, acciones, actividades realizadas
-- "emociones": Sentimientos, estados emocionales explícitos
-- "reflexion": Pensamientos, aprendizajes, introspección, análisis
-- "intencion": Planes, metas, propósitos, deseos futuros
-- "mixto": Combinación de varios tipos en una misma idea
-
-SALIDA:
-Devuelve SOLO un objeto JSON válido (sin markdown, sin explicaciones) con esta estructura:
-{{
-  "chunks": [
-    {{
-      "type": "hechos",
-      "text": "texto original del fragmento..."
-    }}
-  ]
-}}
-
-TEXTO DEL DIARIO:
-<<<
-{contenido}
->>>"""
 
 
 class DiaryAnalyzerError(Exception):
@@ -153,116 +116,112 @@ def extraer_fecha_de_nombre(nombre: str) -> Optional[str]:
         return None
 
 
-def validar_chunks(chunks: List[Dict[str, str]], texto_original: str) -> bool:
-    """
-    Valida que los chunks generados sean correctos.
-    
-    Args:
-        chunks: Lista de chunks a validar
-        texto_original: Texto original del diario
-        
-    Returns:
-        True si los chunks son válidos
-    """
-    if not chunks:
-        logger.warning("No hay chunks para validar")
-        return False
-    
-    # 1. Verificar tipos válidos
-    tipos_validos = {'hechos', 'emociones', 'reflexion', 'intencion', 'mixto'}
-    for i, chunk in enumerate(chunks):
-        if chunk.get('type') not in tipos_validos:
-            logger.warning(f"Chunk {i} tiene tipo inválido: {chunk.get('type')}")
-            return False
-        
-        if not chunk.get('text', '').strip():
-            logger.warning(f"Chunk {i} tiene texto vacío")
-            return False
-    
-    # 2. Verificar cobertura del texto original (al menos 80%)
-    texto_chunks = ' '.join([c['text'] for c in chunks])
-    palabras_original = set(texto_original.lower().split())
-    palabras_chunks = set(texto_chunks.lower().split())
-    
-    if palabras_original:
-        cobertura = len(palabras_original & palabras_chunks) / len(palabras_original)
-        if cobertura < 0.8:
-            logger.warning(f"Chunks solo cubren {cobertura:.1%} del texto original")
-            return False
-    
-    return True
-
-
-def generar_chunks_con_llm(
+def dividir_en_chunks_semanticos(
     texto: str,
-    modelo: str = "liquidai/lfm2-2.6b-exp@f16",
-    max_intentos: int = 2
-) -> List[Dict[str, str]]:
+    min_palabras: int = 100,
+    max_palabras: int = 300
+) -> List[str]:
     """
-    Genera chunks usando el LLM para división semántica inteligente.
+    Divide el texto en chunks semánticos basados en párrafos y longitud.
     
     Args:
-        texto: Texto completo del diario
-        modelo: Modelo LLM a usar
-        max_intentos: Cantidad máxima de reintentos
+        texto: Texto completo a dividir
+        min_palabras: Mínimo de palabras por chunk
+        max_palabras: Máximo de palabras por chunk
         
     Returns:
-        Lista de chunks con type y text
+        Lista de strings, cada uno un chunk semántico
     """
-    logger.info("Generando chunks con LLM...")
+    # Separar por párrafos (doble salto de línea o headers markdown)
+    parrafos = re.split(r'\n\s*\n|(?=^#{1,6}\s)', texto, flags=re.MULTILINE)
+    parrafos = [p.strip() for p in parrafos if p.strip()]
     
-    for intento in range(max_intentos):
-        try:
-            # 1. Construir prompt
-            prompt = PROMPT_CHUNKING.format(contenido=texto)
-            
-            # 2. Llamar al LLM
-            with lms.Client() as client:
-                model = client.llm.model(modelo)
-                result = model.respond(prompt)
-                respuesta = result.content
-            
-            # 3. Extraer JSON
-            json_texto = extraer_json_de_respuesta(respuesta)
-            
-            # 4. Parsear
-            data = json.loads(json_texto)
-            
-            # 5. Validar estructura
-            if 'chunks' not in data:
-                raise ValueError("Respuesta no contiene 'chunks'")
-            
-            chunks = data['chunks']
-            
-            if not isinstance(chunks, list):
-                raise ValueError("'chunks' debe ser una lista")
-            
-            # 6. Validar cada chunk
-            for i, chunk in enumerate(chunks):
-                if 'type' not in chunk or 'text' not in chunk:
-                    logger.warning(f"Chunk {i} sin type o text, ajustando...")
-                    chunk.setdefault('type', 'mixto')
-                    chunk.setdefault('text', '')
-            
-            # 7. Validar calidad de chunks
-            if validar_chunks(chunks, texto):
-                logger.info(f"✓ Generados {len(chunks)} chunks válidos por LLM")
-                return chunks
+    chunks = []
+    chunk_actual = []
+    palabras_actual = 0
+    
+    for parrafo in parrafos:
+        palabras_parrafo = len(parrafo.split())
+        
+        # Si el chunk actual + este párrafo excede el máximo
+        if palabras_actual + palabras_parrafo > max_palabras and chunk_actual:
+            # Guardar el chunk actual si tiene suficientes palabras
+            if palabras_actual >= min_palabras:
+                chunks.append('\n\n'.join(chunk_actual))
+                chunk_actual = [parrafo]
+                palabras_actual = palabras_parrafo
             else:
-                logger.warning(f"Intento {intento + 1}: chunks inválidos, reintentando...")
-                
-        except Exception as e:
-            logger.error(f"Intento {intento + 1} falló al generar chunks: {e}")
-            if intento < max_intentos - 1:
-                logger.info("Reintentando...")
-                time.sleep(1)
+                # Si es muy pequeño, agregar este párrafo de todas formas
+                chunk_actual.append(parrafo)
+                palabras_actual += palabras_parrafo
+        else:
+            chunk_actual.append(parrafo)
+            palabras_actual += palabras_parrafo
     
-    # Fallback: devolver texto completo como un chunk
-    logger.warning("Usando fallback: texto completo como un solo chunk")
-    return [{
-        'type': 'mixto',
-        'text': texto
-    }]
+    # Agregar el último chunk
+    if chunk_actual:
+        chunks.append('\n\n'.join(chunk_actual))
+    
+    # Si el texto es muy corto, devolver como un solo chunk
+    if not chunks:
+        chunks = [texto]
+    
+    logger.debug(f"Texto dividido en {len(chunks)} chunks")
+    return chunks
+
+
+def clasificar_tipo_chunk(texto: str, analisis: Dict[str, Any]) -> str:
+    """
+    Clasifica el tipo de contenido del chunk usando heurísticas simples.
+    
+    Args:
+        texto: Contenido del chunk
+        analisis: Análisis completo de la entrada
+        
+    Returns:
+        Tipo de chunk: "hechos", "emociones", "reflexion", "mixto"
+    """
+    texto_lower = texto.lower()
+    
+    # Palabras indicadoras de emociones
+    palabras_emocionales = [
+        'sentí', 'siento', 'emoción', 'feliz', 'triste', 'ansioso', 'enojado',
+        'frustrado', 'emocionado', 'nervioso', 'alegre', 'deprimido'
+    ]
+    
+    # Palabras indicadoras de reflexión
+    palabras_reflexion = [
+        'creo', 'pienso', 'reflexión', 'aprendí', 'me di cuenta', 'comprendo',
+        'entiendo', 'debería', 'necesito', 'quiero', 'debo'
+    ]
+    
+    # Palabras indicadoras de hechos
+    palabras_hechos = [
+        'hoy', 'fui', 'hice', 'pasó', 'ocurrió', 'reunión', 'trabajo',
+        'proyecto', 'tarea', 'clase', 'estudié'
+    ]
+    
+    puntos_emociones = sum(1 for palabra in palabras_emocionales if palabra in texto_lower)
+    puntos_reflexion = sum(1 for palabra in palabras_reflexion if palabra in texto_lower)
+    puntos_hechos = sum(1 for palabra in palabras_hechos if palabra in texto_lower)
+    
+    # Determinar tipo predominante
+    puntos = {
+        'emociones': puntos_emociones,
+        'reflexion': puntos_reflexion,
+        'hechos': puntos_hechos
+    }
+    
+    max_puntos = max(puntos.values())
+    if max_puntos == 0:
+        return 'mixto'
+    
+    # Si dos categorías están empatadas o muy cerca, es mixto
+    top_categorias = [k for k, v in puntos.items() if v == max_puntos]
+    if len(top_categorias) > 1:
+        return 'mixto'
+    
+    return top_categorias[0]
 
 
 def crear_chunks_enriquecidos(
@@ -272,44 +231,47 @@ def crear_chunks_enriquecidos(
     modelo: str = "liquidai/lfm2-2.6b-exp@f16"
 ) -> List[Dict[str, Any]]:
     """
-    Crea chunks semánticos usando LLM y los enriquece con metadata.
-    
-    Args:
-        texto: Texto completo de la entrada
-        analisis: Análisis estructurado de la entrada
-        entry_id: ID de la entrada padre
-        modelo: Modelo LLM para chunking
-        
-    Returns:
-        Lista de chunks enriquecidos con metadata
+    Crea chunks semánticos enriquecidos usando IA con fallback heurístico.
     """
-    # 1. Generar chunks con LLM
-    chunks_llm = generar_chunks_con_llm(texto, modelo)
-    
-    # 2. Enriquecer con metadata
+    try:
+        chunks_llm = chunkear_con_llm(texto, modelo)
+        logger.info(f"Chunking LLM exitoso ({len(chunks_llm)} chunks)")
+    except Exception:
+        logger.warning("Usando fallback heurístico de chunking")
+        chunks_llm = [
+            {
+                "index": i,
+                "type": clasificar_tipo_chunk(t, analisis),
+                "text": t
+            }
+            for i, t in enumerate(dividir_en_chunks_semanticos(texto))
+        ]
+
     chunks_enriquecidos = []
-    
-    for idx, chunk_data in enumerate(chunks_llm):
-        chunk = {
-            'chunk_id': generar_id_chunk(entry_id, idx),
-            'entry_id': entry_id,
-            'index': idx,
-            'text': chunk_data['text'],
-            'word_count': len(chunk_data['text'].split()),
-            'char_count': len(chunk_data['text']),
-            'type': chunk_data['type'],
-            'metadata': {
-                'date': analisis['fecha'],
-                'emotions': analisis.get('emotions', []),
-                'topics': analisis.get('topics', []),
-                'intensity': analisis.get('intensity', 'media'),
-                'people': analisis.get('people')
+
+    for chunk in chunks_llm:
+        chunk_texto = chunk["text"]
+
+        enriched = {
+            "chunk_id": generar_id_chunk(entry_id, chunk["index"]),
+            "entry_id": entry_id,
+            "index": chunk["index"],
+            "text": chunk_texto,
+            "word_count": len(chunk_texto.split()),
+            "char_count": len(chunk_texto),
+            "type": chunk["type"],
+            "metadata": {
+                "date": analisis["fecha"],
+                "emotions": analisis.get("emotions", []),
+                "topics": analisis.get("topics", []),
+                "intensity": analisis.get("intensity"),
+                "people": analisis.get("people"),
+                "source": "llm" if "chunks_llm" in locals() else "heuristic"
             }
         }
-        
-        chunks_enriquecidos.append(chunk)
-    
-    logger.info(f"Creados {len(chunks_enriquecidos)} chunks enriquecidos para {entry_id}")
+
+        chunks_enriquecidos.append(enriched)
+
     return chunks_enriquecidos
 
 
@@ -493,6 +455,78 @@ def analizar_con_llm(contenido: str, modelo: str = "liquidai/lfm2-2.6b-exp@f16")
     except Exception as e:
         raise ModelError(f"Error al procesar con el modelo: {e}")
 
+def chunkear_con_llm(
+    texto: str,
+    modelo: str = "liquidai/lfm2-2.6b-exp@f16"
+) -> List[Dict[str, str]]:
+    """
+    Usa un LLM para dividir el texto en chunks semánticos conscientes.
+
+    Returns:
+        Lista de objetos:
+        {
+            "index": int,
+            "type": "hechos|emociones|reflexion|mixto",
+            "text": string
+        }
+    """
+    prompt = f"""
+INSTRUCCIONES:
+Divide el siguiente texto de diario personal en fragmentos semánticos coherentes.
+
+REGLAS:
+- No inventes información
+- No agregues contenido nuevo
+- Puedes reformular ligeramente, pero mantén el significado
+- Usa "mixto" si el fragmento combina varios tipos
+- No expliques nada
+
+TIPOS PERMITIDOS:
+- hechos
+- emociones
+- reflexion
+- mixto
+
+SALIDA:
+Devuelve SOLO un JSON válido con esta estructura exacta:
+
+{{
+  "chunks": [
+    {{
+      "index": 0,
+      "type": "emociones",
+      "text": "..."
+    }}
+  ]
+}}
+
+TEXTO:
+<<<{texto}>>>
+"""
+
+    try:
+        with lms.Client() as client:
+            model = client.llm.model(modelo)
+            result = model.respond(prompt)
+
+            if not result or not hasattr(result, 'content'):
+                raise ModelError("Respuesta inválida del modelo en chunking")
+
+            # LOG CRÍTICO: respuesta cruda
+            logger.debug("Respuesta cruda chunking LLM:\n" + result.content)
+
+            json_text = extraer_json_de_respuesta(result.content)
+            data = json.loads(json_text)
+
+            if "chunks" not in data or not isinstance(data["chunks"], list):
+                raise JSONParseError("Estructura inválida de chunks")
+
+            return data["chunks"]
+
+    except Exception as e:
+        logger.error(f"Chunking con LLM falló: {e}")
+        raise
+
 
 def extraer_json_de_respuesta(texto: str) -> str:
     """
@@ -507,20 +541,14 @@ def extraer_json_de_respuesta(texto: str) -> str:
     Raises:
         JSONParseError: Si no se encuentra JSON válido
     """
-    # Estrategia 1: Buscar bloque de código JSON
     match = re.search(r'(?s)```(?:json)?\s*(.*?)\s*```', texto)
+    
     if match:
         return match.group(1).strip()
     
-    # Estrategia 2: Buscar objeto JSON directamente
     match = re.search(r'(?s)\{.*\}', texto)
     if match:
         return match.group(0).strip()
-    
-    # Estrategia 3: El texto completo podría ser JSON
-    texto_limpio = texto.strip()
-    if texto_limpio.startswith('{') and texto_limpio.endswith('}'):
-        return texto_limpio
     
     raise JSONParseError("No se encontró un bloque JSON válido en la respuesta del modelo")
 
@@ -670,8 +698,7 @@ def analizar_diario_individual(
     ruta_archivo: Path,
     ruta_salida: str = "diario.json",
     ruta_chunks: str = "diario_chunks.json",
-    modelo_analisis: str = "liquidai/lfm2-2.6b-exp@f16",
-    modelo_chunking: str = "liquidai/lfm2-2.6b-exp@f16",
+    modelo: str = "liquidai/lfm2-2.6b-exp@f16",
     generar_chunks: bool = True
 ) -> Optional[Dict[str, Any]]:
     """
@@ -681,8 +708,7 @@ def analizar_diario_individual(
         ruta_archivo: Path al archivo de diario
         ruta_salida: Ruta al archivo JSON de salida
         ruta_chunks: Ruta al archivo JSON de chunks
-        modelo_analisis: Modelo para análisis general
-        modelo_chunking: Modelo para generar chunks
+        modelo: Modelo de LM Studio a usar
         generar_chunks: Si True, genera y guarda chunks semánticos
         
     Returns:
@@ -701,7 +727,7 @@ def analizar_diario_individual(
         contenido = leer_archivo_diario(str(ruta_archivo))
         
         # 2. Analizar con LLM
-        respuesta = analizar_con_llm(contenido, modelo_analisis)
+        respuesta = analizar_con_llm(contenido, modelo)
         
         # 3. Extraer JSON
         json_texto = extraer_json_de_respuesta(respuesta)
@@ -717,7 +743,12 @@ def analizar_diario_individual(
         
         # 6. Generar chunks si está habilitado
         if generar_chunks:
-            chunks = crear_chunks_enriquecidos(contenido, analisis, entry_id, modelo_chunking)
+            chunks = crear_chunks_enriquecidos(
+                contenido,
+                analisis,
+                entry_id,
+                modelo
+            )
             guardar_chunks(chunks, ruta_chunks)
             analisis['chunk_count'] = len(chunks)
             logger.info(f"✓ Generados {len(chunks)} chunks para {entry_id}")
@@ -740,8 +771,7 @@ def procesar_carpeta_diarios(
     carpeta: str = "diarios",
     ruta_salida: str = "diario.json",
     ruta_chunks: str = "diario_chunks.json",
-    modelo_analisis: str = "liquidai/lfm2-2.6b-exp@f16",
-    modelo_chunking: str = "liquidai/lfm2-2.6b-exp@f16",
+    modelo: str = "liquidai/lfm2-2.6b-exp@f16",
     forzar_reprocesar: bool = False,
     generar_chunks: bool = True
 ) -> Dict[str, int]:
@@ -752,10 +782,9 @@ def procesar_carpeta_diarios(
         carpeta: Carpeta con los archivos de diario
         ruta_salida: Archivo JSON donde guardar los análisis
         ruta_chunks: Archivo JSON donde guardar los chunks
-        modelo_analisis: Modelo para análisis general
-        modelo_chunking: Modelo para generar chunks (puede ser el mismo o diferente)
+        modelo: Modelo de LM Studio a usar
         forzar_reprocesar: Si True, reprocesa todos los archivos
-        generar_chunks: Si True, genera chunks semánticos con LLM
+        generar_chunks: Si True, genera chunks semánticos
         
     Returns:
         Diccionario con estadísticas del procesamiento
@@ -763,7 +792,7 @@ def procesar_carpeta_diarios(
     logger.info("="*60)
     logger.info("INICIANDO PROCESAMIENTO BATCH DE DIARIOS")
     if generar_chunks:
-        logger.info("Modo: CON CHUNKING SEMÁNTICO (LLM)")
+        logger.info("Modo: CON CHUNKING SEMÁNTICO")
     logger.info("="*60)
     
     estadisticas = {
@@ -798,8 +827,7 @@ def procesar_carpeta_diarios(
                 archivo, 
                 ruta_salida, 
                 ruta_chunks,
-                modelo_analisis,
-                modelo_chunking,
+                modelo,
                 generar_chunks
             )
             
@@ -812,6 +840,7 @@ def procesar_carpeta_diarios(
             
             if i < len(archivos):
                 logger.info("Esperando 1 segundo antes del siguiente archivo...")
+                import time
                 time.sleep(1)
         
         # Resumen final
@@ -845,21 +874,16 @@ if __name__ == "__main__":
     CARPETA_DIARIOS = "diarios"              # Carpeta con los archivos .md
     ARCHIVO_SALIDA = "diario.json"           # Archivo JSON de análisis
     ARCHIVO_CHUNKS = "diario_chunks.json"    # Archivo JSON de chunks
-
-    # Uso modelo
-    MODELO_ANALISIS = "liquidai/lfm2-2.6b-exp@f16"  # Para análisis rápido
-    MODELO_CHUNKING = "mistral-7b-instruct"         # Para chunking preciso
+    MODELO_LLM = "liquidai/lfm2-2.6b-exp@f16"
     FORZAR_REPROCESAR = False                # True para reprocesar todo
     GENERAR_CHUNKS = True                    # True para generar chunks semánticos
-    USAR_LLM_CHUNKING = True  # Tu método
     
     # Ejecutar procesamiento batch
     estadisticas = procesar_carpeta_diarios(
         carpeta=CARPETA_DIARIOS,
         ruta_salida=ARCHIVO_SALIDA,
         ruta_chunks=ARCHIVO_CHUNKS,
-        modelo_analisis= MODELO_ANALISIS,
-        modelo_chunking= MODELO_CHUNKING,
+        modelo=MODELO_LLM,
         forzar_reprocesar=FORZAR_REPROCESAR,
         generar_chunks=GENERAR_CHUNKS
     )

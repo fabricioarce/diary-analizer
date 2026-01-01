@@ -9,7 +9,7 @@ Herramienta automatizada para analizar entradas de diario personal usando modelo
 - 🔍 **Detección Inteligente**: Solo procesa archivos nuevos, evita duplicados
 - 📊 **Extracción Estructurada**: Genera JSON con emociones, temas y resúmenes
 - 📅 **Gestión Automática de Fechas**: Extrae y valida fechas del nombre del archivo
-- 🧩 **Chunking Semántico**: Divide entradas en fragmentos coherentes (100-300 palabras)
+- 🧩 **Chunking Semántico**: Divide entradas en fragmentos coherentes (50-300 palabras)
 - 🏷️ **Clasificación de Chunks**: Identifica tipos (hechos, emociones, reflexiones)
 - 💾 **Doble Almacenamiento**: Análisis completo + chunks separados para RAG
 - 🛡️ **Manejo Robusto de Errores**: Validación completa y mensajes claros

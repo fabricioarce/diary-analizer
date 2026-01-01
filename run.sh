@@ -43,6 +43,7 @@ echo ""
 echo "🧠 [1/4] Analizando entradas del diario..."
 python diary_analyzer.py
 
+sleep 5
 # =========================
 # 2. Generación de embeddings
 # =========================
@@ -50,6 +51,7 @@ echo ""
 echo "🧩 [2/4] Generando embeddings..."
 python embedding_generator.py
 
+sleep 5
 # =========================
 # 3. Actualización FAISS
 # =========================
@@ -57,10 +59,17 @@ echo ""
 echo "📦 [3/4] Actualizando índice vectorial..."
 python query_engine.py --build-index
 
+sleep 5
 # =========================
 # 4. Chat RAG activo
 # =========================
-echo ""
-echo "💬 [4/4] Iniciando chat con memoria del diario"
-echo "=============================================="
-python rag_chat_engine.py
+echo "¿Cómo quieres usar el sistema?"
+echo "1) Interfaz gráfica"
+echo "2) Chat por terminal"
+read -p "> " opcion
+
+if [ "$opcion" == "1" ]; then
+  streamlit run app.py
+else
+  python rag_chat_engine.py
+fi

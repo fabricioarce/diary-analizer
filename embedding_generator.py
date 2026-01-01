@@ -47,7 +47,10 @@ class DiarioVectorIndexer:
         model_name: str = "intfloat/multilingual-e5-small"
     ):
         logger.info(f"Cargando modelo de embeddings: {model_name}")
-        self.model = SentenceTransformer(model_name)
+        self.model = SentenceTransformer(
+            model_name,
+            device="cpu"
+        )
         self.dimension = self.model.get_sentence_embedding_dimension()
         logger.info(f"Modelo cargado | Dimensión: {self.dimension}")
 

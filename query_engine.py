@@ -39,13 +39,17 @@ class DiarioQueryEngine:
     def __init__(
         self,
         model_name: str = "intfloat/multilingual-e5-small",
-        index_path: str = "diario_index.faiss",
-        metadata_path: str = "diario_metadata.json"
+        index_path: str = "data/diario_index.faiss",
+        metadata_path: str = "data/diario_metadata.json"
     ):
         logger.info("Inicializando motor de consulta")
 
         logger.info(f"Cargando modelo de embeddings: {model_name}")
-        self.model = SentenceTransformer(model_name)
+        self.model = SentenceTransformer(
+            model_name,
+            device="cpu"
+        )
+
 
         logger.info(f"Cargando índice FAISS: {index_path}")
         self.index = faiss.read_index(index_path)
@@ -109,13 +113,13 @@ class DiarioQueryEngine:
 # PRUEBA DIRECTA
 # ============================================================
 
-if __name__ == "__main__":
-    engine = DiarioQueryEngine()
+# if __name__ == "__main__":
+#     engine = DiarioQueryEngine()
 
-    pregunta = input("\n📝 Escribe tu pregunta: ")
+#     pregunta = input("\n📝 Escribe tu pregunta: ")
 
-    resultados = engine.buscar(pregunta, k=5)
-    contexto = engine.construir_contexto(resultados)
+#     resultados = engine.buscar(pregunta, k=5)
+#     contexto = engine.construir_contexto(resultados)
 
-    print("\n📚 CONTEXTO RECUPERADO:\n")
-    print(contexto)
+#     print("\n📚 CONTEXTO RECUPERADO:\n")
+#     print(contexto)

@@ -155,14 +155,14 @@ Pregunta del usuario:
         return data["choices"][0]["message"]["content"]
 
 
-if __name__ == "__main__":
-    chat = DiarioRAGChat()
+# if __name__ == "__main__":
+#     chat = DiarioRAGChat()
 
-    while True:
-        pregunta = input("\n🧠 Tú: ")
-        if pregunta.lower() in {"salir", "exit"}:
-            break
+#     while True:
+#         pregunta = input("\n🧠 Tú: ")
+#         if pregunta.lower() in {"salir", "exit"}:
+#             break
 
-        respuesta = chat.preguntar(pregunta)
-        print("\n🤖 IA:\n")
-        print(respuesta)
+#         respuesta = chat.preguntar(pregunta)
+#         print("\n🤖 IA:\n")
+#         print(respuesta)

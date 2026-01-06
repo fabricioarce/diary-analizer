@@ -19,8 +19,55 @@ import hashlib
 from pathlib import Path
 from typing import Dict, Optional, Any, List, Set, Tuple
 from datetime import datetime
-import lmstudio as lms
+import os
+import requests
+import time
+import random
+import time
 
+def post_with_retry(
+    url: str,
+    payload: dict,
+    headers: dict,
+    max_retries: int = 5,
+    base_delay: float = 2.0
+):
+    """
+    POST con retry y backoff exponencial para manejar 429.
+    """
+    for intento in range(1, max_retries + 1):
+        response = requests.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=90
+        )
+
+        if response.status_code != 429:
+            response.raise_for_status()
+            return response
+
+        # 429 → esperar y reintentar
+        wait = base_delay * (2 ** (intento - 1))
+        jitter = random.uniform(0, 0.5)
+        sleep_time = wait + jitter
+
+        logger.warning(
+            f"429 Too Many Requests. "
+            f"Reintento {intento}/{max_retries} "
+            f"esperando {sleep_time:.2f}s"
+        )
+
+        time.sleep(sleep_time)
+
+    raise ModelError("Se excedieron los reintentos por rate limit (429)")
+
+# Configuraci'on con api
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY no definida")
 
 # Configuración de logging
 logging.basicConfig(
@@ -252,6 +299,16 @@ def crear_chunks_enriquecidos(
     chunks_enriquecidos = []
 
     for chunk in chunks_llm:
+        chunk = sanitizar_chunk(chunk, chunk["text"])
+        
+        # Validación estricta del tipo
+        if chunk.get("type") not in {"hechos", "emociones", "reflexion", "mixto"}:
+            logger.warning(
+                f"Tipo inválido detectado en chunk {chunk.get('index')}, "
+                f"forzando a 'mixto'"
+            )
+            chunk["type"] = "mixto"
+
         chunk_texto = chunk["text"]
 
         chunk_metadata = chunk.get("metadata") or {}
@@ -446,20 +503,48 @@ def analizar_con_llm(contenido: str, modelo: str = "liquidai/lfm2-2.6b-exp@f16")
     TEXTO DEL DIARIO:
     <<<{contenido}>>>"""
     
+
+    payload = {
+        "model": modelo,
+        "messages": [
+            {"role": "system", "content": "Eres un analizador de diarios personales."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3
+    }
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
     try:
-        with lms.Client() as client:
-            model = client.llm.model(modelo)
-            result = model.respond(prompt)
-            
-            if not result or not hasattr(result, 'content'):
-                raise ModelError("El modelo no devolvió una respuesta válida")
-            
-            return result.content
-            
-    except ConnectionError as e:
-        raise ModelError(f"No se pudo conectar con LM Studio: {e}")
+        response = post_with_retry(
+            GROQ_API_URL,
+            payload,
+            headers
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+
     except Exception as e:
-        raise ModelError(f"Error al procesar con el modelo: {e}")
+        raise ModelError(f"Error al procesar con API: {e}")
+
+    # try:
+    #     with lms.Client() as client:
+    #         model = client.llm.model(modelo)
+    #         result = model.respond(prompt)
+            
+    #         if not result or not hasattr(result, 'content'):
+    #             raise ModelError("El modelo no devolvió una respuesta válida")
+            
+    #         return result.content
+            
+    # except ConnectionError as e:
+    #     raise ModelError(f"No se pudo conectar con LM Studio: {e}")
+    # except Exception as e:
+    #     raise ModelError(f"Error al procesar con el modelo: {e}")
 
 def chunkear_con_llm(
     texto: str,
@@ -573,28 +658,105 @@ TEXTO A PROCESAR:
 <<<{texto}>>>
 """
 
+    payload = {
+        "model": modelo,
+        "messages": [
+            {"role": "system", "content": "Eres un modelo encargado de chunking semántico estricto."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.2
+    }
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
     try:
-        with lms.Client() as client:
-            model = client.llm.model(modelo)
-            result = model.respond(prompt)
+        response = post_with_retry(
+            GROQ_API_URL,
+            payload,
+            headers
+        )
+        response.raise_for_status()
 
-            if not result or not hasattr(result, 'content'):
-                raise ModelError("Respuesta inválida del modelo en chunking")
+        raw = response.json()["choices"][0]["message"]["content"]
+        logger.debug("Respuesta cruda chunking LLM:\n" + raw)
 
-            # LOG CRÍTICO: respuesta cruda
-            logger.debug("Respuesta cruda chunking LLM:\n" + result.content)
+        json_text = extraer_json_de_respuesta(raw)
+        data = json.loads(json_text)
 
-            json_text = extraer_json_de_respuesta(result.content)
-            data = json.loads(json_text)
+        if "chunks" not in data:
+            raise JSONParseError("Respuesta sin chunks")
 
-            if "chunks" not in data or not isinstance(data["chunks"], list):
-                raise JSONParseError("Estructura inválida de chunks")
-
-            return data["chunks"]
+        return data["chunks"]
 
     except Exception as e:
-        logger.error(f"Chunking con LLM falló: {e}")
-        raise
+        raise ModelError(f"Chunking vía API falló: {e}")
+
+EMOTIONS_WHITELIST = {
+    "alegría", "tristeza", "miedo", "enojo",
+    "ansiedad", "frustración", "calma", "confusión"
+}
+
+def sanitizar_chunk(chunk: Dict[str, Any], texto_chunk: str) -> Dict[str, Any]:
+    clean = dict(chunk)
+
+    metadata = clean.get("metadata") or {}
+    safe_meta = {}
+
+    # people: solo strings capitalizados presentes en el texto
+    if "people" in metadata:
+        safe_people = []
+        for p in metadata["people"]:
+            if isinstance(p, str) and p in texto_chunk:
+                safe_people.append(p)
+        if safe_people:
+            safe_meta["people"] = safe_people
+
+    # emotions: whitelist + presentes literalmente
+    if "emotions" in metadata:
+        safe_emotions = []
+        for e in metadata["emotions"]:
+            if (
+                isinstance(e, str)
+                and e.lower() in EMOTIONS_WHITELIST
+                and e.lower() in texto_chunk.lower()
+            ):
+                safe_emotions.append(e.lower())
+        if safe_emotions:
+            safe_meta["emotions"] = safe_emotions
+
+    # intensity: solo valores válidos
+    if metadata.get("intensity") in {"baja", "media", "alta"}:
+        safe_meta["intensity"] = metadata["intensity"]
+
+    clean["metadata"] = safe_meta
+    return clean
+
+
+    # try:
+    #     with lms.Client() as client:
+    #         model = client.llm.model(modelo)
+    #         result = model.respond(prompt)
+
+    #         if not result or not hasattr(result, 'content'):
+    #             raise ModelError("Respuesta inválida del modelo en chunking")
+
+    #         # LOG CRÍTICO: respuesta cruda
+    #         logger.debug("Respuesta cruda chunking LLM:\n" + result.content)
+
+    #         json_text = extraer_json_de_respuesta(result.content)
+    #         data = json.loads(json_text)
+
+    #         if "chunks" not in data or not isinstance(data["chunks"], list):
+    #             raise JSONParseError("Estructura inválida de chunks")
+
+    #         return data["chunks"]
+
+    # except Exception as e:
+    #     logger.error(f"Chunking con LLM falló: {e}")
+    #     raise
 
 
 def extraer_json_de_respuesta(texto: str) -> str:
@@ -809,7 +971,9 @@ def analizar_diario_individual(
         analisis['raw_text'] = contenido
         analisis['word_count'] = len(contenido.split())
         analisis['char_count'] = len(contenido)
-        
+
+        time.sleep(0.5)
+
         # 6. Generar chunks si está habilitado
         if generar_chunks:
             chunks = crear_chunks_enriquecidos(
@@ -943,7 +1107,8 @@ if __name__ == "__main__":
     CARPETA_DIARIOS = "diarios"              # Carpeta con los archivos .md
     ARCHIVO_SALIDA = "data/diario.json"           # Archivo JSON de análisis
     ARCHIVO_CHUNKS = "data/diario_chunks.json"    # Archivo JSON de chunks
-    MODELO_LLM = "lmstudio-community/Qwen2.5-7B-Instruct-1M-GGUF" #"liquidai/lfm2-2.6b-exp@f16"
+    MODELO_LLM = "qwen/qwen3-32b"
+    MODELO_LLM_local = "lmstudio-community/Qwen2.5-7B-Instruct-1M-GGUF" #"liquidai/lfm2-2.6b-exp@f16"
     FORZAR_REPROCESAR = False                # True para reprocesar todo
     GENERAR_CHUNKS = True                    # True para generar chunks semánticos
     

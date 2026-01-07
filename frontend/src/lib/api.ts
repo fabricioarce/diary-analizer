@@ -13,3 +13,14 @@ export async function sendMessageToChat(message: string) {
 
   return res.json();
 }
+
+export async function getStats() {
+  const res = await fetch(`${API_URL}/stats`);
+  
+  if (!res.ok) {
+    console.error("Error fetching stats:", res.statusText);
+    return null;
+  }
+  
+  return res.json();
+}

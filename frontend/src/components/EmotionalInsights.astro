@@ -1,172 +1,300 @@
 ---
 // Emotional Insights component
+const API_URL = import.meta.env.PUBLIC_API_URL;
 ---
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<div
+  class="grid grid-cols-1 lg:grid-cols-3 gap-4"
+  id="emotional-insights-container"
+  data-api-url={API_URL}
+>
   <!-- Chart Card -->
   <div class="lg:col-span-2 bg-card rounded-lg border border-border p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
         <h3 class="font-semibold text-foreground flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-primary"
+            ><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"
+            ></polyline><polyline points="16 7 22 7 22 13"></polyline></svg
+          >
           Patrones Emocionales
         </h3>
         <p class="text-xs text-muted-foreground mt-1">Últimos 7 días</p>
       </div>
     </div>
 
-    <canvas id="emotion-chart" class="w-full" height="180"></canvas>
+    <div class="relative w-full h-[200px]">
+      <canvas id="emotion-chart"></canvas>
+      <div
+        id="chart-loading"
+        class="absolute inset-0 flex items-center justify-center bg-card/50 backdrop-blur-sm"
+      >
+        <span class="text-sm text-muted-foreground animate-pulse"
+          >Cargando datos...</span
+        >
+      </div>
+    </div>
 
-    <div class="flex gap-4 mt-4 text-xs">
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full bg-chart-1"></div>
-        <span class="text-muted-foreground">Felicidad</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full bg-chart-2"></div>
-        <span class="text-muted-foreground">Energía</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full bg-chart-3"></div>
-        <span class="text-muted-foreground">Ansiedad</span>
-      </div>
+    <div
+      id="dataset-legend"
+      class="flex gap-4 mt-4 text-xs justify-center flex-wrap"
+    >
+      <!-- Legend items will be injected here -->
     </div>
   </div>
 
   <!-- Stats Cards -->
-  <div class="space-y-4">
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-1/10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground">Felicidad</p>
-            <p class="text-xl font-semibold text-foreground">78%</p>
-          </div>
-        </div>
-        <span class="text-xs font-medium text-chart-4">+12%</span>
-      </div>
-    </div>
-
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-2/10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground">Energía</p>
-            <p class="text-xl font-semibold text-foreground">75%</p>
-          </div>
-        </div>
-        <span class="text-xs font-medium text-chart-4">+8%</span>
-      </div>
-    </div>
-
-    <div class="bg-card rounded-lg border border-border p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-3/10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-3"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground">Calma</p>
-            <p class="text-xl font-semibold text-foreground">82%</p>
-          </div>
-        </div>
-        <span class="text-xs font-medium text-chart-4">+15%</span>
-      </div>
+  <div class="space-y-4" id="stats-cards-container">
+    <!-- Placeholders while loading -->
+    <div class="bg-card rounded-lg border border-border p-4 animate-pulse">
+      <div class="h-10 w-10 bg-muted rounded mb-2"></div>
+      <div class="h-4 w-24 bg-muted rounded"></div>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+></script>
 
 <script is:inline>
-  const emotionData = [
-    { day: "Lun", felicidad: 65, ansiedad: 45, energia: 70 },
-    { day: "Mar", felicidad: 70, ansiedad: 40, energia: 75 },
-    { day: "Mié", felicidad: 55, ansiedad: 60, energia: 50 },
-    { day: "Jue", felicidad: 75, ansiedad: 35, energia: 80 },
-    { day: "Vie", felicidad: 85, ansiedad: 30, energia: 85 },
-    { day: "Sáb", felicidad: 80, ansiedad: 25, energia: 90 },
-    { day: "Dom", felicidad: 78, ansiedad: 28, energia: 75 },
-  ];
+  async function initDashboard() {
+    const container = document.getElementById("emotional-insights-container");
+    const apiUrl = container.dataset.apiUrl;
+    const statsContainer = document.getElementById("stats-cards-container");
+    const chartLoading = document.getElementById("chart-loading");
+    const legendContainer = document.getElementById("dataset-legend");
 
-  const canvas = document.getElementById('emotion-chart');
-  
-  if (canvas && typeof Chart !== 'undefined') {
-    const ctx = canvas.getContext('2d');
+    try {
+      const res = await fetch(`${apiUrl}/stats`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
 
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: emotionData.map(d => d.day),
-        datasets: [
-          {
-            label: 'Felicidad',
-            data: emotionData.map(d => d.felicidad),
-            borderColor: '#818cf8',
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2,
-          },
-          {
-            label: 'Energía',
-            data: emotionData.map(d => d.energia),
-            borderColor: '#c084fc',
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2,
-          },
-          {
-            label: 'Ansiedad',
-            data: emotionData.map(d => d.ansiedad),
-            borderColor: '#60a5fa',
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2,
-            borderDash: [5, 5],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            backgroundColor: '#18181b',
-            borderColor: '#27272a',
-            borderWidth: 1,
-            titleColor: '#fafafa',
-            bodyColor: '#fafafa',
-          },
+      // 1. Render Stats Cards (Top 3 Emotions)
+      statsContainer.innerHTML = "";
+
+      const topEmotions = data.top_emotions || [];
+      const total = data.total_entries || 1;
+
+      if (topEmotions.length === 0) {
+        statsContainer.innerHTML = `<div class="text-center text-muted-foreground p-4 text-sm">No hay datos suficientes aún.</div>`;
+      }
+
+      // SVG Paths configuration
+      const icons = {
+        smile:
+          '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', // Heart/Happy
+        zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>', // Lightning/Energy
+        coffee:
+          '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>', // Cup/Calm
+        alert:
+          '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>', // Alert
+        activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', // Pulse/Anxiety
+        cloud:
+          '<path d="M17.5 19c0-1.7-1.3-3-3-3h-1.1c-.1-2.9-2.4-5.2-5.3-5.3-2.7 0-5 2-5.4 4.7-.2.1-.4.2-.6.2C3.3 15.6 2 17 2 18.5 2 20.4 3.6 22 5.5 22h12c1.9 0 3.5-1.6 3.5-3.5 0-.9-.4-1.8-1-2.5h-2.5z"/>', // Cloud/Sad
+      };
+
+      // Map emotions to configuration
+      const emotionConfig = {
+        felicidad: {
+          icon: icons.smile,
+          color: "text-chart-1",
+          bg: "bg-chart-1/10",
         },
-        scales: {
-          x: {
-            grid: {
-              display: false,
-            },
-            ticks: {
-              color: '#a1a1aa',
-              font: {
-                size: 12,
+        alegría: {
+          icon: icons.smile,
+          color: "text-chart-1",
+          bg: "bg-chart-1/10",
+        },
+        entusiasmo: {
+          icon: icons.smile,
+          color: "text-chart-1",
+          bg: "bg-chart-1/10",
+        },
+
+        energía: {
+          icon: icons.zap,
+          color: "text-chart-2",
+          bg: "bg-chart-2/10",
+        },
+        motivación: {
+          icon: icons.zap,
+          color: "text-chart-2",
+          bg: "bg-chart-2/10",
+        },
+
+        calma: {
+          icon: icons.coffee,
+          color: "text-chart-3",
+          bg: "bg-chart-3/10",
+        },
+        paz: { icon: icons.coffee, color: "text-chart-3", bg: "bg-chart-3/10" },
+        tranquilidad: {
+          icon: icons.coffee,
+          color: "text-chart-3",
+          bg: "bg-chart-3/10",
+        },
+
+        ansiedad: {
+          icon: icons.activity,
+          color: "text-red-400",
+          bg: "bg-red-400/10",
+        },
+        incomodidad: {
+          icon: icons.activity,
+          color: "text-orange-400",
+          bg: "bg-orange-400/10",
+        },
+        estrés: {
+          icon: icons.activity,
+          color: "text-red-400",
+          bg: "bg-red-400/10",
+        },
+
+        tristeza: {
+          icon: icons.cloud,
+          color: "text-blue-400",
+          bg: "bg-blue-400/10",
+        },
+        inseguridad: {
+          icon: icons.alert,
+          color: "text-yellow-400",
+          bg: "bg-yellow-400/10",
+        },
+        miedo: {
+          icon: icons.alert,
+          color: "text-purple-400",
+          bg: "bg-purple-400/10",
+        },
+
+        default: {
+          icon: '<circle cx="12" cy="12" r="10"/>',
+          color: "text-primary",
+          bg: "bg-primary/10",
+        },
+      };
+
+      topEmotions.slice(0, 3).forEach((emotion) => {
+        const name = emotion.name.toLowerCase();
+        // Calculate percentage (count / total_entries)
+        const percentage = Math.round((emotion.value / total) * 100);
+
+        // Config styles
+        const config = emotionConfig[name] || emotionConfig["default"];
+
+        // Construct HTML
+        const cardHtml = `
+            <div class="bg-card rounded-lg border border-border p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center ${config.bg}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${config.color}">
+                        ${config.icon}
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs text-muted-foreground capitalize">${name}</p>
+                    <p class="text-xl font-semibold text-foreground">${percentage}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+        `;
+        statsContainer.insertAdjacentHTML("beforeend", cardHtml);
+      });
+
+      // 2. Render Chart
+      const trends = data.weekly_trends;
+      const ctx = document.getElementById("emotion-chart").getContext("2d");
+
+      if (trends && trends.datasets.length > 0) {
+        // Setup Legend
+        legendContainer.innerHTML = "";
+        trends.datasets.forEach((ds) => {
+          const item = `
+             <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full" style="background-color: ${ds.borderColor}"></div>
+                <span class="text-muted-foreground capitalize">${ds.label}</span>
+              </div>
+            `;
+          legendContainer.insertAdjacentHTML("beforeend", item);
+        });
+
+        // Config Chart
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: trends.dates,
+            datasets: trends.datasets.map((ds) => ({
+              ...ds,
+              tension: 0.4,
+              pointRadius: 4,
+              borderWidth: 2,
+              backgroundColor: ds.borderColor,
+            })),
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#18181b",
+                titleColor: "#fafafa",
+                bodyColor: "#fafafa",
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      context.dataset.label + ": " + context.parsed.y + "%"
+                    );
+                  },
+                },
               },
             },
-            border: {
-              display: false,
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: "#a1a1aa" },
+                border: { display: false },
+              },
+              y: {
+                display: false,
+                min: 0,
+                suggestedMax: 100,
+              },
             },
           },
-          y: {
-            display: false,
-          },
-        },
-      },
-    });
+        });
+      } else {
+        // Empty state chart
+        const ctx = document.getElementById("emotion-chart");
+        ctx.parentNode.innerHTML =
+          '<div class="h-full flex items-center justify-center text-muted-foreground text-sm">No hay datos recientes para mostrar gráficas</div>';
+      }
+
+      chartLoading.style.display = "none";
+    } catch (e) {
+      console.error("Dashboard error:", e);
+      statsContainer.innerHTML =
+        '<div class="text-red-400 text-sm">Error cargando datos</div>';
+      chartLoading.style.display = "none";
+    }
+  }
+
+  // Init
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDashboard);
+  } else {
+    initDashboard();
   }
 </script>

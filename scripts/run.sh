@@ -64,19 +64,19 @@ echo ""
 echo "📦 [3/4] Actualizando índice vectorial..."
 python -m backend.app.core.query_engine --build-index
 
-sleep 5
+# sleep 5
 
-# =========================
-# 4. Chat RAG
-# =========================
-echo ""
-echo "¿Cómo quieres usar el sistema?"
-echo "1) Interfaz gráfica"
-echo "2) Chat por terminal"
-read -p "> " opcion
+# # =========================
+# # 4. Chat RAG
+# # =========================
+# echo ""
+# echo "¿Cómo quieres usar el sistema?"
+# echo "1) Interfaz gráfica"
+# echo "2) Chat por terminal"
+# read -p "> " opcion
 
-if [ "$opcion" == "1" ]; then
-  streamlit run backend/app/ui/app.py
-else
-  python -m backend.app.core.rag_chat_engine_api
-fi
+# if [ "$opcion" == "1" ]; then
+#   streamlit run backend/app/ui/app.py
+# else
+#   python -m backend.app.core.rag_chat_engine_api
+# fi

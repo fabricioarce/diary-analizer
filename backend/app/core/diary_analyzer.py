@@ -131,39 +131,54 @@ def generar_id_chunk(entry_id: str, chunk_index: int) -> str:
 
 def validar_nombre_archivo(nombre: str) -> bool:
     """
-    Valida que el nombre del archivo siga el formato dd-mm-yyyy.md
-    
-    Args:
-        nombre: Nombre del archivo a validar
-        
-    Returns:
-        True si el formato es válido, False en caso contrario
+    Valida que el nombre del archivo siga el formato:
+    - dd-mm-yyyy.md (estricto o laxo)
+    - yyyy-mm-dd.md (iso)
     """
-    patron = r'^\d{2}-\d{2}-\d{4}\.md$'
-    return bool(re.match(patron, nombre))
+    if not nombre.endswith('.md'):
+        return False
+        
+    date_part = nombre.replace('.md', '')
+    
+    # Intentar parsear con múltiples formatos
+    formatos = ['%d-%m-%Y', '%Y-%m-%d', '%d-%m-%y']
+    
+    for fmt in formatos:
+        try:
+            datetime.strptime(date_part, fmt)
+            return True
+        except ValueError:
+            continue
+            
+    return False
 
 
 def extraer_fecha_de_nombre(nombre: str) -> Optional[str]:
     """
-    Extrae la fecha del nombre del archivo.
+    Extrae la fecha del nombre del archivo y la normaliza a dd-mm-yyyy.
     
     Args:
-        nombre: Nombre del archivo (ej: "15-12-2025.md")
+        nombre: Nombre del archivo
         
     Returns:
-        Fecha en formato dd-mm-yyyy o None si no es válida
+        Fecha en formato dd-mm-yyyy o None
     """
-    if not validar_nombre_archivo(nombre):
+    if not nombre.endswith('.md'):
         return None
     
-    fecha = nombre.replace('.md', '')
+    date_part = nombre.replace('.md', '')
     
-    try:
-        datetime.strptime(fecha, '%d-%m-%Y')
-        return fecha
-    except ValueError:
-        logger.warning(f"'{nombre}' tiene formato correcto pero fecha inválida")
-        return None
+    formatos = ['%d-%m-%Y', '%Y-%m-%d']
+    
+    for fmt in formatos:
+        try:
+            dt = datetime.strptime(date_part, fmt)
+            return dt.strftime('%d-%m-%Y')
+        except ValueError:
+            continue
+            
+    logger.warning(f"'{nombre}' no coincide con ningún formato de fecha conocido")
+    return None
 
 
 def dividir_en_chunks_semanticos(
@@ -373,9 +388,13 @@ def obtener_archivos_diario(carpeta: Path) -> List[Path]:
             logger.warning(f"No se encontraron archivos de diario válidos en '{carpeta}'")
             return []
         
-        archivos_validos.sort(key=lambda x: datetime.strptime(
-            x.name.replace('.md', ''), '%d-%m-%Y'
-        ))
+        def sort_key(archivo):
+            fecha_str = extraer_fecha_de_nombre(archivo.name)
+            if not fecha_str:
+                return datetime.min # Should not happen due to filter above
+            return datetime.strptime(fecha_str, '%d-%m-%Y')
+
+        archivos_validos.sort(key=sort_key)
         
         logger.info(f"Encontrados {len(archivos_validos)} archivos de diario en '{carpeta}'")
         return archivos_validos
@@ -1131,6 +1150,8 @@ if __name__ == "__main__":
         print(f"✓ Procesamiento completado: {estadisticas['exitosos']} archivos analizados")
         if estadisticas['chunks_generados'] > 0:
             print(f"📦 Total de chunks generados: {estadisticas['chunks_generados']}")
+    elif estadisticas['total'] == 0:
+        print("✓ Todo al día. No hay nuevos archivos para procesar.")
     else:
-        print("✗ No se pudo procesar ningún archivo")
+        print("✗ No se procesaron archivos (revise los logs para detalles)")
     print("="*60)

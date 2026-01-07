@@ -25,6 +25,7 @@
 - [x] Búsqueda y filtros
 - [ ] Exportar entradas
 - [ ] Improve markdown rendering
+- [ ] Agregar el resto de paginas para funciones especificas
 
 ## Infraestructura
 - [ ] Preparar variables de entorno para producción

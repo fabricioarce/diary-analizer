@@ -1,0 +1,100 @@
+---
+// filepath: /home/fabri/Documents/Diario/frontend/src/components/DiaryChat.astro
+import { sendMessageToChat } from "../lib/api";
+---
+
+<div class="bg-card rounded-lg border border-border flex flex-col h-[45vh] lg:h-full">
+  <div class="p-4 border-b border-border flex items-center gap-2">
+    <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+    </div>
+    <div>
+      <h2 class="font-semibold text-foreground">Asistente IA Personal</h2>
+      <p class="text-xs text-muted-foreground">Entrenado con tu diario</p>
+    </div>
+  </div>
+
+  <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
+    <div class="flex justify-start">
+      <div class="max-w-[80%] rounded-2xl px-4 py-3 bg-muted text-foreground">
+        <p class="text-sm leading-relaxed">
+          Hola 👋 Soy tu compañero de IA personalizado. He estado aprendiendo de tus entradas de diario para poder darte consejos más personalizados. ¿En qué puedo ayudarte hoy?
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4 border-t border-border">
+    <div class="flex gap-2">
+      <input
+        id="chat-input"
+        type="text"
+        placeholder="Pregúntame algo sobre tus emociones..."
+        class="flex-1 px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+      <button id="send-btn" class="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input') as HTMLInputElement;
+  const sendBtn = document.getElementById('send-btn');
+
+  function addMessage(role: 'user' | 'assistant', content: string) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[80%] rounded-2xl px-4 py-3 ${
+      role === 'user' 
+        ? 'bg-primary text-primary-foreground' 
+        : 'bg-muted text-foreground'
+    }`;
+    
+    const text = document.createElement('p');
+    text.className = 'text-sm leading-relaxed';
+    text.textContent = content;
+    
+    bubble.appendChild(text);
+    messageDiv.appendChild(bubble);
+    chatMessages?.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages?.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+  }
+
+  function handleSend() {
+    const message = chatInput?.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    chatInput.value = '';
+
+    // Simulate AI response
+    setTimeout(() => {
+      addMessage(
+        'assistant',
+        'Entiendo lo que sientes. Basándome en tus entradas anteriores, veo que esto es algo que has experimentado antes. ¿Te gustaría hablar más sobre ello?'
+      );
+    }, 1000);
+  }
+
+  sendBtn?.addEventListener('click', handleSend);
+  
+  chatInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  });
+</script>
+
+<style>
+  button {
+    cursor: pointer;
+    border: none;
+  }
+</style>

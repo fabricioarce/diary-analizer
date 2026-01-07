@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+:root {
+--background: #fbf8f1;
+--foreground: #272017;
+--card: #ffffff;
+--card-foreground: #272017;
+--popover: #ffffff;
+--popover-foreground: #272017;
+--primary: #c33e00;
+--primary-foreground: #fcfcfc;
+--secondary: #ebe4d6;
+--secondary-foreground: #272017;
+--muted: #f1eee7;
+--muted-foreground: #797065;
+--accent: #d98b09;
+--accent-foreground: #fcfcfc;
+--destructive: #de3b3d;
+--destructive-foreground: #fcfcfc;
+--border: #e1ded7;
+--input: #e1ded7;
+--ring: #c33e00;
+--chart-1: #c33e00;
+--chart-2: #d98b09;
+--chart-3: #00a4ac;
+--chart-4: #a6b86e;
+--chart-5: #c5b3ea;
+--radius: 0.75rem;
+}
+.dark {
+--background: #0e0b07;
+--foreground: #f1eee7;
+--card: #14110d;
+--card-foreground: #f1eee7;
+--popover: #14110d;
+--popover-foreground: #f1eee7;
+--primary: #e26500;
+--primary-foreground: #fcfcfc;
+--secondary: #272017;
+--secondary-foreground: #f1eee7;
+--muted: #272017;
+--muted-foreground: #958e82;
+--accent: #e99b2a;
+--accent-foreground: #fcfcfc;
+--destructive: #cc272e;
+--destructive-foreground: #fcfcfc;
+--border: #272017;
+--input: #272017;
+--ring: #e26500;
+--chart-1: #e26500;
+--chart-2: #e99b2a;
+--chart-3: #00b4bc;
+--chart-4: #b5c87d;
+--chart-5: #d5c2fb;
+}
+* {
+border-color: var(--border);
+}
+body {
+background-color: var(--background);
+color: var(--foreground);
+font-family: system-ui, -apple-system, sans-serif;
+-webkit-font-smoothing: antialiased;
+}

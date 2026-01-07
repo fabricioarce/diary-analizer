@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+import DiaryEditor from '../components/DiaryEditor.astro';
+import EmotionalInsights from '../components/EmotionalInsights.astro';
+import DiaryChat from '../components/DiaryChat.astro';
+---
+
+<Layout>
+  <div class="flex h-screen bg-background">
+    <Sidebar />
+    <main class="flex flex-1 flex-col lg:flex-row gap-4 p-4 lg:p-6 overflow-hidden">
+      <div class="flex flex-col gap-4 flex-1 min-h-0">
+        <DiaryEditor />
+        <EmotionalInsights />
+      </div>
+      <div class="flex-1 min-h-0">
+        <DiaryChat />
+      </div>
+    </main>
+  </div>
+</Layout>

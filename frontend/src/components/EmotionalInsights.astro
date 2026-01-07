@@ -1,0 +1,172 @@
+---
+// Emotional Insights component
+---
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <!-- Chart Card -->
+  <div class="lg:col-span-2 bg-card rounded-lg border border-border p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="font-semibold text-foreground flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Patrones Emocionales
+        </h3>
+        <p class="text-xs text-muted-foreground mt-1">Últimos 7 días</p>
+      </div>
+    </div>
+
+    <canvas id="emotion-chart" class="w-full" height="180"></canvas>
+
+    <div class="flex gap-4 mt-4 text-xs">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-chart-1"></div>
+        <span class="text-muted-foreground">Felicidad</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-chart-2"></div>
+        <span class="text-muted-foreground">Energía</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-chart-3"></div>
+        <span class="text-muted-foreground">Ansiedad</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="space-y-4">
+    <div class="bg-card rounded-lg border border-border p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-1/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Felicidad</p>
+            <p class="text-xl font-semibold text-foreground">78%</p>
+          </div>
+        </div>
+        <span class="text-xs font-medium text-chart-4">+12%</span>
+      </div>
+    </div>
+
+    <div class="bg-card rounded-lg border border-border p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-2/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Energía</p>
+            <p class="text-xl font-semibold text-foreground">75%</p>
+          </div>
+        </div>
+        <span class="text-xs font-medium text-chart-4">+8%</span>
+      </div>
+    </div>
+
+    <div class="bg-card rounded-lg border border-border p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-chart-3/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-chart-3"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Calma</p>
+            <p class="text-xl font-semibold text-foreground">82%</p>
+          </div>
+        </div>
+        <span class="text-xs font-medium text-chart-4">+15%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script is:inline>
+  const emotionData = [
+    { day: "Lun", felicidad: 65, ansiedad: 45, energia: 70 },
+    { day: "Mar", felicidad: 70, ansiedad: 40, energia: 75 },
+    { day: "Mié", felicidad: 55, ansiedad: 60, energia: 50 },
+    { day: "Jue", felicidad: 75, ansiedad: 35, energia: 80 },
+    { day: "Vie", felicidad: 85, ansiedad: 30, energia: 85 },
+    { day: "Sáb", felicidad: 80, ansiedad: 25, energia: 90 },
+    { day: "Dom", felicidad: 78, ansiedad: 28, energia: 75 },
+  ];
+
+  const canvas = document.getElementById('emotion-chart');
+  
+  if (canvas && typeof Chart !== 'undefined') {
+    const ctx = canvas.getContext('2d');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: emotionData.map(d => d.day),
+        datasets: [
+          {
+            label: 'Felicidad',
+            data: emotionData.map(d => d.felicidad),
+            borderColor: '#818cf8',
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2,
+          },
+          {
+            label: 'Energía',
+            data: emotionData.map(d => d.energia),
+            borderColor: '#c084fc',
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2,
+          },
+          {
+            label: 'Ansiedad',
+            data: emotionData.map(d => d.ansiedad),
+            borderColor: '#60a5fa',
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [5, 5],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: '#18181b',
+            borderColor: '#27272a',
+            borderWidth: 1,
+            titleColor: '#fafafa',
+            bodyColor: '#fafafa',
+          },
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              color: '#a1a1aa',
+              font: {
+                size: 12,
+              },
+            },
+            border: {
+              display: false,
+            },
+          },
+          y: {
+            display: false,
+          },
+        },
+      },
+    });
+  }
+</script>

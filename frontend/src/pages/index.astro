@@ -1,22 +1,302 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Sidebar from '../components/Sidebar.astro';
-import DiaryEditor from '../components/DiaryEditor.astro';
-import EmotionalInsights from '../components/EmotionalInsights.astro';
-import DiaryChat from '../components/DiaryChat.astro';
+import Layout from "../layouts/Layout.astro";
+import Sidebar from "../components/Sidebar.astro";
 ---
 
-<Layout>
-  <div class="flex h-screen bg-background">
-    <Sidebar />
-    <main class="flex flex-1 flex-col lg:flex-row gap-4 p-4 lg:p-6 overflow-hidden">
-      <div class="flex flex-col gap-4 flex-1 min-h-0">
-        <DiaryEditor />
-        <EmotionalInsights />
-      </div>
-      <div class="flex-1 min-h-0">
-        <DiaryChat />
-      </div>
-    </main>
-  </div>
+<Layout title="Nexus Dashboard">
+    <div class="flex h-screen bg-background">
+        <Sidebar />
+
+        <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+            <div class="max-w-6xl mx-auto space-y-8">
+                <!-- Header Section -->
+                <header
+                    class="flex flex-col md:flex-row md:items-end justify-between gap-4"
+                >
+                    <div>
+                        <h1
+                            class="text-4xl font-bold text-foreground tracking-tight"
+                        >
+                            Hola, Fabricio
+                        </h1>
+                        <p class="text-muted-foreground mt-2 text-lg">
+                            Bienvenido a tu Centro de Control Personal.
+                        </p>
+                    </div>
+                    <div
+                        class="flex items-center gap-3 bg-card p-3 rounded-2xl border border-border shadow-sm"
+                    >
+                        <div class="text-right">
+                            <p
+                                class="text-xs font-medium text-muted-foreground uppercase"
+                            >
+                                Miércoles
+                            </p>
+                            <p class="text-sm font-semibold text-foreground">
+                                07 Ene, 2026
+                            </p>
+                        </div>
+                        <div
+                            class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                ><rect
+                                    width="18"
+                                    height="18"
+                                    x="3"
+                                    y="4"
+                                    rx="2"
+                                    ry="2"></rect><line
+                                    x1="16"
+                                    x2="16"
+                                    y1="2"
+                                    y2="6"></line><line
+                                    x1="8"
+                                    x2="8"
+                                    y1="2"
+                                    y2="6"></line><line
+                                    x1="3"
+                                    x2="21"
+                                    y1="10"
+                                    y2="10"></line></svg
+                            >
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Main Modules Grid -->
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    <!-- Journal Card (Active) -->
+                    <a
+                        href="/journal"
+                        class="group relative bg-card hover:bg-accent/50 border border-border rounded-3xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden"
+                    >
+                        <div
+                            class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"
+                        >
+                        </div>
+                        <div class="flex flex-col h-full gap-4">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    ><path
+                                        d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
+                                    ></path></svg
+                                >
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-foreground">
+                                    Diario IA
+                                </h3>
+                                <p class="text-muted-foreground mt-1 text-sm">
+                                    Analiza tus reflexiones y chatea con tu
+                                    pasado.
+                                </p>
+                            </div>
+                            <div
+                                class="mt-auto flex items-center justify-between"
+                            >
+                                <span
+                                    class="text-xs font-medium px-2 py-1 rounded-full bg-green-500/10 text-green-500 border border-green-500/20"
+                                    >Activo</span
+                                >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="text-muted-foreground group-hover:text-primary transition-colors translate-x-0 group-hover:translate-x-1"
+                                    ><path d="M5 12h14"></path><path
+                                        d="m12 5 7 7-7 7"></path></svg
+                                >
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Creativity Card (Planned) -->
+                    <div
+                        class="group bg-card/50 border border-border border-dashed rounded-3xl p-6 opacity-80"
+                    >
+                        <div class="flex flex-col h-full gap-4">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    ><path d="M12 2v8"></path><path
+                                        d="m4.93 10.93 1.41 1.41"></path><path
+                                        d="M2 18h2"></path><path d="M20 18h2"
+                                    ></path><path d="m19.07 10.93-1.41 1.41"
+                                    ></path><path d="M22 22H2"></path><path
+                                        d="m16 6-4 4-4-4"></path><path
+                                        d="M16 18a4 4 0 1 1-8 0"></path></svg
+                                >
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-foreground/70"
+                                >
+                                    Creatividad Pixar
+                                </h3>
+                                <p class="text-muted-foreground mt-1 text-sm">
+                                    Sistema de desbloqueo creativo y narrativa
+                                    personal.
+                                </p>
+                            </div>
+                            <div class="mt-auto">
+                                <span
+                                    class="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground border border-border"
+                                    >Próximamente</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decisions Card (Planned) -->
+                    <div
+                        class="group bg-card/50 border border-border border-dashed rounded-3xl p-6 opacity-80"
+                    >
+                        <div class="flex flex-col h-full gap-4">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    ><circle cx="12" cy="12" r="10"
+                                    ></circle><path d="m16 10-4 4-4-4"
+                                    ></path></svg
+                                >
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-xl font-bold text-foreground/70"
+                                >
+                                    Sistema de Decisiones
+                                </h3>
+                                <p class="text-muted-foreground mt-1 text-sm">
+                                    Matriz de Urgencia vs Importancia
+                                    (Eisenhower).
+                                </p>
+                            </div>
+                            <div class="mt-auto">
+                                <span
+                                    class="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground border border-border"
+                                    >Próximamente</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Insights / Global Stats -->
+                <section
+                    class="bg-card border border-border rounded-3xl p-8 overflow-hidden relative"
+                >
+                    <div
+                        class="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"
+                    >
+                    </div>
+                    <h2 class="text-2xl font-bold text-foreground mb-6">
+                        Estado Global
+                    </h2>
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                    >
+                        <div class="space-y-1">
+                            <p class="text-sm text-muted-foreground">
+                                Estado de Ánimo Promedio
+                            </p>
+                            <p class="text-2xl font-bold text-foreground">
+                                Calma & Enfoque
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-muted-foreground">
+                                Tareas Críticas
+                            </p>
+                            <p class="text-2xl font-bold text-primary">
+                                3 Pendientes
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-muted-foreground">
+                                Racha Creativa
+                            </p>
+                            <p class="text-2xl font-bold text-foreground">
+                                12 Días
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm text-muted-foreground">
+                                Última Reflexión
+                            </p>
+                            <p class="text-2xl font-bold text-foreground">
+                                Hace 2h
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
 </Layout>
+
+<style>
+    /* Animaciones suaves */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    main > div {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+</style>

@@ -1,4 +1,4 @@
-from backend.app.core.rag_chat_engine_api import DiarioRAGChat
+from backend.app.modules.journal.core.rag_chat_engine_api import DiarioRAGChat
 
 _chat = DiarioRAGChat()
 

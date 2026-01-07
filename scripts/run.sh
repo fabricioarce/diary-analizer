@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}==============================================${NC}"
-echo -e "${GREEN}📔 Diario IA — Sistema de Gestión Inteligente${NC}"
+echo -e "${GREEN}🚀 Nexus Personal OS — Centro de Control Inteligente${NC}"
 echo -e "${BLUE}==============================================${NC}"
 
 # 1. Comprobaciones de entorno
@@ -55,25 +55,25 @@ check_dependencies() {
 
 # 2. Pipeline de Procesamiento
 run_pipeline() {
-    echo -e "\n${BLUE}🧠 Procesando entradas del diario...${NC}"
+    echo -e "\n${BLUE}🧠 Procesando módulos de Nexus (Journal)...${NC}"
     
     mkdir -p data/diary/entries data/diary/processed data/raw
     
     echo "1/3 Analizando archivos..."
-    python3 -m backend.app.core.diary_analyzer
+    python3 -m backend.app.modules.journal.core.diary_analyzer
     
     echo "2/3 Generando embeddings..."
-    python3 -m backend.app.core.embedding_generator
+    python3 -m backend.app.modules.journal.core.embedding_generator
     
     echo "3/3 Actualizando índice vectorial..."
-    python3 -m backend.app.core.query_engine --build-index
+    python3 -m backend.app.modules.journal.core.query_engine --build-index
     
-    echo -e "${GREEN}✅ Procesamiento completado.${NC}"
+    echo -e "${GREEN}✅ Procesamiento de Journal completado.${NC}"
 }
 
 # 3. Lanzamiento de Servicios
 start_frontend() {
-    echo -e "\n${GREEN}🚀 Lanzando Frontend y Backend (API)${NC}"
+    echo -e "\n${GREEN}🚀 Lanzando Nexus OS (Dashboard + API)${NC}"
     
     trap "kill 0" EXIT
 
@@ -89,8 +89,8 @@ start_frontend() {
 }
 
 start_cli() {
-    echo -e "\n${GREEN}💬 Iniciando Chat en Terminal...${NC}"
-    python3 -m backend.app.core.rag_chat_engine_api
+    echo -e "\n${GREEN}💬 Iniciando Chat en Terminal (Journal)...${NC}"
+    python3 -m backend.app.modules.journal.core.rag_chat_engine_api
 }
 
 # --- Menú Principal ---

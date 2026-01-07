@@ -1,44 +1,27 @@
-# 🏗️ Arquitectura del Sistema
+# 🏗️ Arquitectura del Sistema: Nexus OS
 
-Este documento explica cómo funciona **Diario IA** bajo el capó. 
+Este documento explica cómo funciona **Nexus** bajo el capó. 
 
 ## 🧩 Componentes Principales
 
-El sistema se divide en tres partes que trabajan juntas:
+El sistema se basa en una arquitectura de **Monolito Modular**:
 
-1.  **Motor de Procesamiento** (Python): Lee tus textos y los "entiende".
-2.  **Cerebro Vectorial** (FAISS): Almacena tus recuerdos de forma que se puedan buscar por significado.
-3.  **Interfaz de Usuario** (Astro + React): La aplicación que ves y con la que chateas.
-
----
-
-## 🛠️ Detalle Técnico
-
-### 1. El Backend (`backend/app/`)
-Construido con **FastAPI**. Es el puente entre tus datos y la interfaz.
-*   **`core/diary_analyzer.py`**: Utiliza APIs de IA (Groq o LM Studio) para analizar sentimientos y temas.
-*   **`core/embedding_generator.py`**: Convierte el texto en números (vectores) para que la computadora pueda comparar significados.
-*   **`core/rag_chat_engine.py`**: Implementa la técnica **RAG** (Generación Aumentada por Recuperación). Busca tus diarios relevantes y se los da a la IA como "contexto" para que sus respuestas sean precisas.
-
-### 2. El Frontend (`frontend/`)
-Construido con **Astro** y **React**.
-*   Diseñado para ser rápido y fluido.
-*   Se comunica con el backend para enviarle tus preguntas y mostrarte las reflexiones.
+1.  **Nexus Dashboard** (Astro + React): La "Shell" central que orquesta la navegación y muestra el estado global de todos los módulos.
+2.  **Módulos del Sistema** (FastAPI): Cada funcionalidad (Diario, Creatividad, etc.) vive en su propio espacio aislado dentro de `backend/app/modules/`.
+3.  **Core compartido**: Motores de IA, generación de embeddings y bases de datos vectoriales accesibles por todos los módulos.
 
 ---
 
-## 🔄 Flujo de Datos
+## 🛠️ Detalle Técnico del Módulo Diario IA
 
-### ¿Cómo se guardan tus recuerdos?
-1.  Pones un archivo `.md` en `data/raw/`.
-2.  El analyzer extrae la fecha y analiza el sentimiento.
-3.  El embedder crea un índice en `data/diario_index.faiss`.
+### 1. El Backend (`backend/app/modules/journal/`)
+*   **`core/diary_analyzer.py`**: Analizador de sentimientos y temas usando LLMs.
+*   **`core/embedding_generator.py`**: Motor de vectorización de reflexiones.
+*   **`services/diary_service.py`**: Lógica de persistencia y procesamiento en segundo plano.
 
-### ¿Cómo funciona el Chat?
-1.  Tú escribes: *"¿Cómo me sentía en mi cumpleaños?"*
-2.  El sistema busca en `data/diario_index.faiss` los fragmentos que hablan de cumpleaños.
-3.  Le envía esos fragmentos a **Groq (Llama 3)**.
-4.  La IA te responde: *"En tu cumpleaños te sentías muy feliz porque..."*
+### 2. El Frontend (`frontend/src/pages/journal/`)
+*   Interfaz dedicada para la escritura y exploración de recuerdos.
+*   Se conecta a la API modular en `/api/journal/...`.
 
 ---
 
@@ -46,12 +29,16 @@ Construido con **Astro** y **React**.
 
 ```
 /
-├── backend/app/        # Servidor API y Lógica IA
-├── frontend/src/       # Diseño y Pantallas de la Web
-├── scripts/            # Script 'run.sh' para inicio rápido
-├── data/
-│   ├── raw/            # Pon aquí tus archivos .md
-│   ├── processed/      # Resultados del análisis
-│   └── diary/          # Base de datos vectorial final
-└── docs/               # Guías y Manuales
+├── backend/app/
+│   ├── modules/
+│   │   └── journal/      # Módulo de Diario (Lógica, API, Core)
+│   ├── core/             # Lógica compartida (Excepciones, Base)
+│   └── main.py           # Orquestador central de la API
+├── frontend/src/
+│   ├── pages/
+│   │   ├── index.astro   # Dashboard Central
+│   │   └── journal/      # Interfaz del Diario
+│   └── components/       # Componentes React/Astro
+├── data/                 # Bases de datos y archivos brutos
+└── docs/                 # Documentación técnica
 ```

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.app.services.chat_service import ask_chat
+from backend.app.modules.journal.services.chat_service import ask_chat
 
 router = APIRouter()
 

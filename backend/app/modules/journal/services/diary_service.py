@@ -3,14 +3,14 @@ import logging
 from datetime import date
 from pathlib import Path
 from backend.app.config import CHUNKS_FILE, FAISS_INDEX_FILE, METADATA_FILE, RAW_DIARY_JSON
-from backend.app.core.diary_analyzer import (
+from backend.app.modules.journal.core.diary_analyzer import (
     analizar_con_llm, 
     crear_chunks_enriquecidos, 
     generar_id_entrada,
     extraer_json_de_respuesta,
     guardar_analisis
 )
-from backend.app.core.embedding_generator import DiarioVectorIndexer
+from backend.app.modules.journal.core.embedding_generator import DiarioVectorIndexer
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def process_diary_entry(text: str, date_str: str):
         try:
              analisis = json.loads(analisis_raw)
         except json.JSONDecodeError:
-             from backend.app.core.diary_analyzer import extraer_json_de_respuesta
+             from backend.app.modules.journal.core.diary_analyzer import extraer_json_de_respuesta
              json_text = extraer_json_de_respuesta(analisis_raw)
              analisis = json.loads(json_text)
 

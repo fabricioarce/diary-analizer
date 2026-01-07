@@ -2,16 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from backend.app.api import diary, chat, stats
+from backend.app.modules.journal.api import diary, chat, stats
 from backend.app.core.exceptions import global_exception_handler
 
-app = FastAPI(title="Diario Reflexivo API")
+app = FastAPI(title="Nexus Personal OS API")
 
 app.add_exception_handler(Exception, global_exception_handler)
 
-app.include_router(diary.router, prefix="/api/diary")
-app.include_router(chat.router, prefix="/api/chat")
-app.include_router(stats.router, prefix="/api/stats")
+app.include_router(diary.router, prefix="/api/journal/diary")
+app.include_router(chat.router, prefix="/api/journal/chat")
+app.include_router(stats.router, prefix="/api/journal/stats")
 
 app.add_middleware(
     CORSMiddleware,

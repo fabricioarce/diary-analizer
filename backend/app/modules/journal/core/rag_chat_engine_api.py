@@ -3,7 +3,7 @@ import logging
 import os
 from dotenv import load_dotenv
 
-from backend.app.core.query_engine import DiarioQueryEngine
+from backend.app.modules.journal.core.query_engine import DiarioQueryEngine
 
 # ============================================================
 # CONFIGURACIÓN GROQ

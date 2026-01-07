@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
-from backend.app.services.diary_service import (
+from backend.app.modules.journal.services.diary_service import (
     save_entry,
     list_entries,
     read_entry,

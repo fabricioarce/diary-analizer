@@ -1,76 +1,45 @@
 # 🚀 Guía de Uso y Flujo de Trabajo
 
-Aprende a ejecutar el sistema completo, desde añadir nuevas entradas hasta chatear con tu diario.
+Aprende a sacar el máximo provecho a tu **Diario IA**.
 
-## 📝 1. Añadir Nuevas Entradas
+## 📝 1. Cómo añadir nuevas entradas
 
-1.  Crea archivos Markdown (`.md`) con tus entradas de diario.
-2.  Guárdalos en la carpeta `diarios/` en la raíz del proyecto.
-3.  **Formato Recomendado**: Usa el nombre del archivo como `DD-MM-YYYY.md` para facilitar la detección de fechas.
-
-Ejemplo `diarios/15-01-2024.md`:
-```markdown
-# Reflexión del Lunes
-
-Hoy aprendí mucho sobre estoicismo...
-```
-
-## 🧠 2. Procesar y Analizar (Pipeline Offline)
-
-Cada vez que añadas entradas nuevas, debes ejecutar el pipeline para indexarlas.
-
-Asegúrate de tener activa tu **venv** de Python y **LM Studio corriendo** (puerto 1234).
-
-### Ejecución Automática (Recomendado)
-
-Usa el script `run.sh` desde la raíz:
-
-```bash
-./run.sh
-```
-*Este script intentará ejecutar todo el proceso. Si solo quieres procesar datos, puedes interrumpirlo antes de lanzar la UI.*
-
-### Ejecución Manual Paso a Paso
-
-Si prefieres control total, ejecuta los módulos de Python:
-
-1.  **Analizar Diarios** (Genera JSONs):
-    ```bash
-    python -m backend.app.core.diary_analyzer
-    ```
-2.  **Generar Embeddings e Índice** (Crea `.faiss`):
-    ```bash
-    python -m backend.app.core.query_engine --build-index
-    ```
-
-## 💻 3. Ejecutar la Aplicación (Modo Desarrollo)
-
-Para usar el Chatbot con la interfaz moderna, necesitas correr dos servidores simultáneamente (en dos terminales distintas).
-
-### Terminal 1: Backend (API)
-
-```bash
-# Desde la raíz del proyecto
-source .venv/bin/activate
-uvicorn backend.app.main:app --reload
-```
-*El servidor API estará disponible en `http://localhost:8000`.*
-
-### Terminal 2: Frontend (UI)
-
-```bash
-# Desde la carpeta frontend/
-cd frontend
-pnpm dev
-```
-*La aplicación web estará disponible en `http://localhost:4321`.*
+1.  Escribe tus reflexiones en archivos Markdown (`.md`).
+2.  Guárdalos en la carpeta `data/raw/` (aquí es donde el sistema busca archivos nuevos).
+3.  **Nombre del archivo**: Usa el formato `DD-MM-YYYY.md` (ej. `07-01-2026.md`). 
+    *Si usas otro formato, el sistema intentará reconocerlo, pero este es el más seguro.*
 
 ---
 
-## 🐢 Modo Legacy (Streamlit)
+## 🧠 2. Procesar tus diarios (Análisis)
 
-Si necesitas probar algo rápido sin levantar el frontend de Astro:
+Para que la IA "lea" tus nuevos diarios, necesitas ejecutar el proceso de análisis. Tienes dos formas:
 
+### Opción A: Botón Todo en Uno (Recomendado)
+Ejecuta el script principal:
 ```bash
-streamlit run backend/app/app.py
+bash scripts/run.sh
 ```
+Elige la **Opción 1** para procesar y abrir la web, o la **Opción 3** solo para actualizar los datos.
+
+### Opción B: Manual (Paso a paso)
+Si eres usuario avanzado y tienes activado tu entorno virtual:
+1.  **Analizar texto**: `python3 -m backend.app.core.diary_analyzer`
+2.  **Generar búsqueda**: `python3 -m backend.app.core.embedding_generator`
+3.  **Actualizar índice**: `python3 -m backend.app.core.query_engine --build-index`
+
+---
+
+## 💻 3. Usar la Aplicación
+
+Una vez procesados los datos, abre la interfaz:
+1.  Ejecuta `bash scripts/run.sh` y elige la **Opción 4** (Solo lanzar frontend).
+2.  Entra en `http://localhost:4321`.
+3.  ¡Empieza a chatear! Puedes preguntar sobre cualquier cosa que hayas escrito.
+
+---
+
+## ⚡ Consejos para mejores resultados
+*   **Sé específico**: En lugar de "Hoy me siento mal", describe *por qué* y *qué pasó*. La IA detectará mejor los patrones.
+*   **Usa nombres**: Si mencionas a personas, la IA podrá decirte cuándo aparecieron por última vez.
+*   **Formato Markdown**: Puedes usar `# Títulos` o `- Listas` para organizar tus pensamientos; el sistema los entiende perfectamente.

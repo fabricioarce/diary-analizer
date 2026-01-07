@@ -1,88 +1,58 @@
 # 🛠️ Guía de Instalación y Configuración
 
-Configura tu entorno de desarrollo para ejecutar **Diario Reflexivo**.
+Esta guía es para usuarios que prefieren configurar el sistema manualmente. Si buscas algo más simple, te recomendamos la **[🐣 Guía para Principiantes](GUIDE_FOR_BEGINNERS.md)**.
 
 ## 📋 Requisitos Previos
 
-Antes de comenzar, asegúrate de tener instalado:
+1.  **Python 3.10+**
+2.  **Node.js 18+** y un gestor de paquetes (`pnpm`, `npm` o `yarn`).
+3.  **Groq API Key**: Necesaria para el Chat ([consíguela aquí](https://console.groq.com)).
+4.  **LM Studio** (Opcional): Para análisis local offline.
 
-1.  **Python 3.10+**: Para el backend y scripts de análisis.
-2.  **Node.js 18+** y **pnpm** (o npm): Para el frontend.
-3.  **LM Studio** (Opcional pero recomendado para análisis local): Para procesar los diarios con privacidad total.
-4.  **Cuenta de Groq** (Requerido para el Chat): Obtén una API Key en [console.groq.com](https://console.groq.com).
+---
 
 ## 🔧 Configuración del Backend
 
-### 1. Entorno Virtual
+1.  **Entorno Virtual**:
+    ```bash
+    python -m venv .venv
+    # Activar (Linux/Mac): source .venv/bin/activate
+    # Activar (Windows): .venv\Scripts\activate
+    ```
 
-Navega a la raíz del proyecto y crea un entorno virtual:
+2.  **Dependencias**:
+    ```bash
+    pip install -r backend/requirements.txt
+    ```
 
-```bash
-# Crear entorno
-python -m venv .venv
-
-# Activar entorno
-# En Linux/Mac:
-source .venv/bin/activate
-# En Windows:
-.venv\Scripts\activate
-```
-
-### 2. Instalar Dependencias
-
-Instala las librerías necesarias:
-
-```bash
-pip install -r requirements.txt
-```
-
-> **Nota**: Si no existe `requirements.txt`, las dependencias principales son: `fastapi`, `uvicorn`, `streamlit`, `sentence-transformers`, `faiss-cpu`, `requests`, `python-dotenv`.
-
-### 3. Variables de Entorno
-
-Crea un archivo `.env` en la carpeta `backend/app/` (o en la raíz del backend según configuración):
-
-```env
-GROQ_API_KEY=gsk_tu_api_key_aqui...
-```
-
-*   `GROQ_API_KEY`: *Requerido*. Tu llave para generar respuestas de chat.
+3.  **Variables de Entorno**:
+    Crea `backend/app/.env` con tu clave:
+    ```env
+    GROQ_API_KEY=gsk_...
+    ```
 
 ---
 
 ## 🎨 Configuración del Frontend
 
-El frontend está construido con **Astro**.
-
-### 1. Instalar Dependencias
-
-Navega a la carpeta `frontend`:
-
-```bash
-cd frontend
-pnpm install
-# O si usas npm:
-npm install
-```
-
-### 2. Configuración de Entorno (Frontend)
-
-Crea un archivo `.env` en `frontend/` si necesitas configurar la URL de la API:
-
-```env
-PUBLIC_API_URL=http://localhost:8000
-```
+1.  **Instalar y Correr**:
+    ```bash
+    cd frontend
+    pnpm install  # o npm install
+    pnpm dev      # o npm run dev
+    ```
 
 ---
 
-## ⚙️ Configuración de LM Studio (Para Análisis)
+## ⚙️ Uso de LM Studio (Opcional)
 
-Si vas a procesar nuevas entradas de diario:
+Si prefieres no usar Groq para el análisis inicial:
+1.  Abre LM Studio e inicia el Local Server (puerto 1234).
+2.  Carga un modelo (ej. Llama 3 8B).
+3.  El sistema detectará automáticamente el servidor si está activo durante el proceso de análisis.
 
-1.  Abre **LM Studio**.
-2.  Carga un modelo ligero pero capaz (ej. `Llama 3 8B` o `Mistral 7B`).
-3.  Ve a la pestaña de **Local Server**.
-4.  Inicia el servidor en el puerto `1234` (default).
-5.  Asegúrate de que `CORS` esté habilitado si es necesario (generalmente no afecta llamadas locales de python).
+---
 
-¡Listo! Ya tienes todo configurado. Pasa a la guía de [Uso](USAGE.md) para ejecutar el proyecto.
+> [!NOTE]
+> Para ejecutar todo de una vez sin configurar terminales separadas, usa `bash scripts/run.sh`.
+

@@ -1,99 +1,65 @@
-# 🧠 Diario Reflexivo con IA
+# 📔 Diario IA — Tu Memoria Personal Inteligente
 
-> Sistema completo de análisis semántico de diario personal con RAG (Retrieval Augmented Generation), búsqueda vectorial y chatbot conversacional.
+> Transforma tus reflexiones diarias en una base de conocimientos privada y chatea con tu "yo" del pasado usando Inteligencia Artificial.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Astro](https://img.shields.io/badge/astro-5.0-orange.svg)](https://astro.build)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
----
-
-## 📋 Tabla de Contenidos
-
-- [Descripción General](#-descripción-general)
-- [Características](#-características)
-- [Documentación](#-documentación)
-- [Inicio Rápido](#-inicio-rápido)
-- [Tecnologías](#-tecnologías)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
+![Astro](https://img.shields.io/badge/Astro-5.0-FF5D01?style=flat&logo=astro&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat&logo=fastapi&logoColor=white)
 
 ---
 
-## 🎯 Descripción General
+## 🌟 ¿Qué es Diario IA?
 
-**Diario Reflexivo con IA** es un sistema integral que transforma tus entradas de diario personal en una base de conocimiento semántica consultable. Utiliza modelos de lenguaje locales (LM Studio) para el análisis inicial offline, embeddings multilingües para búsqueda semántica, y **Groq API** para conversaciones contextualizadas en tiempo real.
+¿Alguna vez has querido preguntarle a tu diario cómo te sentías hace un año? ¿O qué patrones de pensamiento se repiten en tu vida? **Diario IA** hace esto posible.
 
-### ¿Qué hace este sistema?
-
-1.  **Analiza** tus entradas de diario (emociones, temas).
-2.  **Indexa** semánticamente tus memorias en una base de datos vectorial local.
-3.  **Conversa** contigo a través de una interfaz moderna, respondiendo preguntas sobre tu pasado, patrones emocionales y reflexiones.
+1.  **Analiza**: Lee tus archivos `.md` de diario y extrae emociones y temas.
+2.  **Organiza**: Guarda todo en una base de datos "vectorial" (buscable por significado, no solo palabras).
+3.  **Conversa**: Te permite chatear con tus propios recuerdos usando una IA que respeta tu privacidad.
 
 ---
 
-## ✨ Características
+## 🚀 Inicio Rápido (¡Sin complicaciones!)
 
-*   **100% Privacidad en Procesamiento**: El análisis de tus textos se hace localmente con LM Studio.
-*   **Chatbot RAG Rápido**: Respuestas instantáneas usando Groq (Llama 3 / Mixtral) con contexto de tus diarios.
-*   **Interfaz Moderna**: Frontend construido con Astro y React para una experiencia fluida.
-*   **API Robusta**: Backend en FastAPI modular y extensible.
-*   **Búsqueda Semántica**: Encuentra recuerdos por significado, no solo palabras clave.
+Si quieres empezar **YA**, sigue estos pasos:
 
----
+### 1. Preparación
+*   Instala [Python 3.10 o superior](https://www.python.org/downloads/).
+*   Instala [Node.js](https://nodejs.org/).
+*   Consigue una [API Key de Groq](https://console.groq.com/) (es gratis y muy rápida).
 
-## 📚 Documentación
+### 2. Configuración
+Crea un archivo llamado `.env` en la carpeta `backend/app` y pon tu clave:
+```env
+GROQ_API_KEY=tu_clave_aqui_gs_...
+```
 
-Hemos organizado la documentación en guías detalladas:
-
-*   **[🛠️ Guía de Instalación (SETUP.md)](docs/SETUP.md)**: Requisitos y pasos para configurar Backend y Frontend.
-*   **[🚀 Guía de Uso (USAGE.md)](docs/USAGE.md)**: Cómo añadir diarios, ejecutar el pipeline y usar la App.
-*   **[🏗️ Arquitectura (ARCHITECTURE.md)](docs/ARCHITECTURE.md)**: Diagramas y explicación técnica de los componentes.
-*   **[📡 Referencia API (API_REFERENCE.md)](docs/API_REFERENCE.md)**: Documentación de los endpoints del Backend.
-
----
-
-## ⚡ Inicio Rápido
-
-Si ya tienes los requisitos (Python, Node.js, LM Studio):
-
-1.  **Instalar dependencias**:
-    ```bash
-    # Backend
-    python -m venv .venv && source .venv/bin/activate
-    pip install -r requirements.txt
-    
-    # Frontend
-    cd frontend && pnpm install
-    ```
-
-2.  **Configurar `.env`**:
-    Añade tu `GROQ_API_KEY` en `backend/app/.env`.
-
-3.  **Ejecutar Servidores**:
-    
-    *Backend* (Terminal 1):
-    ```bash
-    uvicorn backend.app.main:app --reload
-    ```
-    
-    *Frontend* (Terminal 2):
-    ```bash
-    cd frontend && pnpm dev
-    ```
-
-Visita `http://localhost:4321` para usar la aplicación.
+### 3. ¡A correr! 🏃‍♂️
+Solo tienes que abrir una terminal en la carpeta del proyecto y escribir:
+```bash
+bash scripts/run.sh
+```
+*Este script hará TODO por ti: instalará lo que falta, procesará tus diarios y lanzará la aplicación.*
 
 ---
 
-## 🛠️ Tecnologías
+## 📚 Guías Detalladas
 
-### Backend
-*   **FastAPI**: Server API.
-*   **LangChain / RAG**: Lógica de chat.
-*   **FAISS**: Base de datos vectorial.
-*   **Sentence Transformers**: Embeddings locales.
+Si quieres saber más o algo no funciona, mira nuestras guías:
 
-### Frontend
-*   **Astro**: Framework web.
-*   **React**: Componentes de UI.
-*   **TailwindCSS**: Estilos.
+*   **[🐣 Guía para Principiantes](docs/GUIDE_FOR_BEGINNERS.md)**: El manual de "cero a héroe" paso a paso.
+*   **[🛠️ Instalación y Configuración](docs/SETUP.md)**: Si prefieres hacer las cosas a mano.
+*   **[📖 Cómo usar el sistema](docs/USAGE.md)**: Cómo escribir tus diarios para que la IA los entienda mejor.
+*   **[🏗️ Arquitectura Técnica](docs/ARCHITECTURE.md)**: Para los curiosos que quieren saber cómo funciona por dentro.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+*   **Backend**: FastAPI, FAISS (Búsqueda Vectorial), Sentence Transformers.
+*   **Frontend**: Astro, React, TailwindCSS.
+*   **IA**: Groq API (Llama 3) para velocidad y LM Studio para uso opcional local.
+
+---
+
+> [!TIP]
+> **Privacidad Primero**: Tus diarios se procesan localmente o mediante APIs seguras. Nada de lo que escribes se usa para entrenar modelos públicos.

@@ -1,100 +1,57 @@
 # 🏗️ Arquitectura del Sistema
 
-Este documento describe la arquitectura técnica de **Diario Reflexivo**, un sistema diseñado para analizar, indexar y conversar con entradas de diario personal.
+Este documento explica cómo funciona **Diario IA** bajo el capó. 
 
 ## 🧩 Componentes Principales
 
-El sistema está dividido en tres capas principales:
+El sistema se divide en tres partes que trabajan juntas:
 
-1.  **Pipeline de Procesamiento de Datos** (Python Scritps)
-2.  **Backend API** (FastAPI)
-3.  **Frontend** (Astro + React/Tailwind)
-*(Componente Legacy: Streamlit App)*
+1.  **Motor de Procesamiento** (Python): Lee tus textos y los "entiende".
+2.  **Cerebro Vectorial** (FAISS): Almacena tus recuerdos de forma que se puedan buscar por significado.
+3.  **Interfaz de Usuario** (Astro + React): La aplicación que ves y con la que chateas.
 
-### 1. Pipeline de Procesamiento de Datos (`backend/app/core/`)
+---
 
-Este es el núcleo del análisis offline. Se encarga de transformar los archivos de texto plano (Markdown) en una base de conocimiento vectorial.
+## 🛠️ Detalle Técnico
 
-*   **Entrada**: Archivos Markdown en `diarios/*.md`.
-*   **`diary_analyzer.py`**:
-    *   Lee los archivos y extrae metadatos (fecha).
-    *   Utiliza un LLM Local (vía LM Studio) para analizar sentimientos, emociones y generar resúmenes.
-    *   Divide el texto en *chunks* semánticos optimizados para recuperación.
-    *   Guarda resultados en `data/diario.json` y `data/diario_chunks.json`.
-*   **`embedding_generator.py`**:
-    *   Toma los chunks procesados.
-    *   Genera vectores (embeddings) usando modelos `sentence-transformers` (ej. `intfloat/multilingual-e5-small`).
-    *   Crea un índice FAISS (`data/diario_index.faiss`) para búsqueda rápida.
+### 1. El Backend (`backend/app/`)
+Construido con **FastAPI**. Es el puente entre tus datos y la interfaz.
+*   **`core/diary_analyzer.py`**: Utiliza APIs de IA (Groq o LM Studio) para analizar sentimientos y temas.
+*   **`core/embedding_generator.py`**: Convierte el texto en números (vectores) para que la computadora pueda comparar significados.
+*   **`core/rag_chat_engine.py`**: Implementa la técnica **RAG** (Generación Aumentada por Recuperación). Busca tus diarios relevantes y se los da a la IA como "contexto" para que sus respuestas sean precisas.
 
-### 2. Backend API (`backend/app/`)
-
-Servidor que expone la lógica de negocio y los datos procesados al frontend.
-
-*   **Tecnología**: FastAPI.
-*   **Core Logic**:
-    *   **`rag_chat_engine_api.py`**: Gestiona la lógica RAG (Retrieval Augmented Generation). Recupera chunks relevantes desde FAISS y consulta a la API de Groq para generar respuestas.
-*   **Endpoints**:
-    *   `/api/chat`: Endpoint para enviar mensajes y recibir respuestas del asistente.
-    *   `/api/diary`: (Planificado) Para listar entradas y estadísticas.
-    *   `/api/stats`: Estadísticas del diario.
-
-### 3. Frontend (`frontend/`)
-
-Interfaz de usuario moderna y responsiva.
-
-*   **Tecnología**: Astro.
-*   **Funcionalidad**:
-    *   Interfaz de Chat (`DiaryChat.astro`).
-    *   Comunicación con el Backend vía fetch REST API.
-    *   Visualización de respuestas en markdown.
+### 2. El Frontend (`frontend/`)
+Construido con **Astro** y **React**.
+*   Diseñado para ser rápido y fluido.
+*   Se comunica con el backend para enviarle tus preguntas y mostrarte las reflexiones.
 
 ---
 
 ## 🔄 Flujo de Datos
 
-### Flujo de Indexación (Offline)
+### ¿Cómo se guardan tus recuerdos?
+1.  Pones un archivo `.md` en `data/raw/`.
+2.  El analyzer extrae la fecha y analiza el sentimiento.
+3.  El embedder crea un índice en `data/diario_index.faiss`.
 
-```mermaid
-graph LR
-    MD[Archivos .md] --> Analyzer[diary_analyzer.py]
-    Analyzer --> |LLM Local| Analysis[JSON Data]
-    Analysis --> Chunks[Chunks Semánticos]
-    Chunks --> Embedder[embedding_generator.py]
-    Embedder --> FAISS[Índice FAISS (.faiss)]
-    Embedder --> Metadata[Metadata (.json)]
-```
+### ¿Cómo funciona el Chat?
+1.  Tú escribes: *"¿Cómo me sentía en mi cumpleaños?"*
+2.  El sistema busca en `data/diario_index.faiss` los fragmentos que hablan de cumpleaños.
+3.  Le envía esos fragmentos a **Groq (Llama 3)**.
+4.  La IA te responde: *"En tu cumpleaños te sentías muy feliz porque..."*
 
-### Flujo de Conversación (Online)
+---
 
-```mermaid
-graph LR
-    User[Usuario] --> |Mensaje| Frontend[Astro UI]
-    Frontend --> |POST /api/chat| Backend[FastAPI]
-    Backend --> |Query Vector| FAISS[Índice FAISS]
-    FAISS --> |Contexto Relevante| Backend
-    Backend --> |Prompt + Contexto| Groq[Groq API (Llama 3)]
-    Groq --> |Respuesta| Backend
-    Backend --> |JSON| Frontend
-    Frontend --> |UI Update| User
-```
-
-## 📂 Estructura de Directorios Clave
+## 📂 Estructura de Carpetas
 
 ```
 /
-├── backend/
-│   ├── app/
-│   │   ├── api/            # Rutas de FastAPI
-│   │   ├── core/           # Lógica de negocio (Analyzer, RAG, Embeddings)
-│   │   └── main.py         # Punto de entrada FastAPI
-│   └── ...
-├── frontend/               # Código fuente Astro
-│   ├── src/
-│   │   ├── components/
-│   │   └── pages/
-│   └── ...
-├── scripts/                # Scripts de utilidad (run.sh)
-├── data/                   # Almacenamiento de índices y JSONs (Ignorado en git)
-├── diarios/                # Carpeta de entrada para tus archivos .md
-└── docs/                   # Documentación del proyecto
+├── backend/app/        # Servidor API y Lógica IA
+├── frontend/src/       # Diseño y Pantallas de la Web
+├── scripts/            # Script 'run.sh' para inicio rápido
+├── data/
+│   ├── raw/            # Pon aquí tus archivos .md
+│   ├── processed/      # Resultados del análisis
+│   └── diary/          # Base de datos vectorial final
+└── docs/               # Guías y Manuales
 ```

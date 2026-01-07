@@ -23,6 +23,9 @@ import os
 import requests
 import time
 import random
+from sqlmodel import Session, select
+from backend.app.core.database import engine
+from backend.app.modules.journal.models import JournalEntry, EntryAnalysis, EntryChunk
 import time
 from dotenv import load_dotenv
 
@@ -900,6 +903,48 @@ def guardar_analisis(analisis: Dict[str, Any], ruta_json: Path) -> None:
         
         logger.info(f"Análisis guardado exitosamente en {ruta_json}")
         
+        # --- DATABASE SYNC ---
+        try:
+            fecha_str = analisis.get("fecha")
+            if fecha_str:
+                try:
+                    query_date = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+                except ValueError:
+                    query_date = datetime.strptime(fecha_str, "%d-%m-%Y").date()
+                
+                with Session(engine) as session:
+                    entry = session.exec(select(JournalEntry).where(JournalEntry.date == query_date)).first()
+                    if not entry:
+                        # Create entry if missing (should not happen in service, but possible in batch)
+                        raw_text = analisis.get("raw_text", "")
+                        entry = JournalEntry(
+                            date=query_date,
+                            raw_text=raw_text,
+                            word_count=len(raw_text.split()) if raw_text else 0,
+                            char_count=len(raw_text) if raw_text else 0
+                        )
+                        session.add(entry)
+                        session.commit()
+                        session.refresh(entry)
+                    
+                    existing_analysis = session.exec(select(EntryAnalysis).where(EntryAnalysis.entry_id == entry.id)).first()
+                    if existing_analysis:
+                        session.delete(existing_analysis)
+                    
+                    db_analysis = EntryAnalysis(
+                        entry_id=entry.id,
+                        summary=analisis.get("summary", ""),
+                        intensity=analisis.get("intensity", "media"),
+                        emotions=analisis.get("emotions", []),
+                        topics=analisis.get("topics", []),
+                        people=analisis.get("people", [])
+                    )
+                    session.add(db_analysis)
+                    session.commit()
+                    logger.info(f"Análisis sincronizado en DB para {fecha_str}")
+        except Exception as e:
+            logger.error(f"Error al sincronizar análisis con DB: {e}")
+        
     except PermissionError:
         raise FileReadError(f"Sin permisos para escribir en {ruta_json}")
     except Exception as e:
@@ -940,6 +985,45 @@ def guardar_chunks(chunks: List[Dict[str, Any]], ruta_json: Path) -> None:
         )
         
         logger.info(f"Chunks guardados exitosamente en {ruta_json} (total: {len(chunks_existentes)})")
+        
+        # --- DATABASE SYNC ---
+        try:
+            if chunks:
+                # Group by entry
+                entry_ids = set(c.get("entry_id") for c in chunks)
+                with Session(engine) as session:
+                    for eid in entry_ids:
+                        # Find entry by ID (e.g. entry_2025_01_07)
+                        parts = eid.split("_")
+                        if len(parts) >= 4:
+                            date_str = f"{parts[1]}-{parts[2]}-{parts[3]}"
+                            query_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                            entry = session.exec(select(JournalEntry).where(JournalEntry.date == query_date)).first()
+                            
+                            if entry:
+                                # Delete old chunks for this entry that are in the new batch
+                                # (Or just delete all and re-add for this entry if we are batching)
+                                old_chunks = session.exec(select(EntryChunk).where(EntryChunk.entry_id == entry.id)).all()
+                                for oc in old_chunks:
+                                    session.delete(oc)
+                                
+                                # Add new batches
+                                for c_data in chunks:
+                                    if c_data.get("entry_id") == eid:
+                                        db_chunk = EntryChunk(
+                                            entry_id=entry.id,
+                                            index=c_data.get("index", 0),
+                                            chunk_type=c_data.get("type", "mixto"),
+                                            text=c_data.get("text", ""),
+                                            word_count=c_data.get("word_count", 0),
+                                            char_count=c_data.get("char_count", 0),
+                                            metadata_json=c_data.get("metadata", {})
+                                        )
+                                        session.add(db_chunk)
+                    session.commit()
+                    logger.info(f"Chunks sincronizados en DB")
+        except Exception as e:
+            logger.error(f"Error al sincronizar chunks con DB: {e}")
         
     except PermissionError:
         raise FileReadError(f"Sin permisos para escribir en {ruta_json}")

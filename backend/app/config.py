@@ -25,3 +25,7 @@ PROCESSED_DIR = DIARY_DIR / "processed"
 CHUNKS_FILE = PROCESSED_DIR / "chunks.json"
 METADATA_FILE = PROCESSED_DIR / "metadata.json"
 FAISS_INDEX_FILE = PROCESSED_DIR / "index.faiss"
+
+# ── DATABASE ─────────────────────────────
+DATABASE_PATH = DATA_DIR / "diario.db"
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"

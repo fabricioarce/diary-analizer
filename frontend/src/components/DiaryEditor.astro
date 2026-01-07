@@ -1,11 +1,5 @@
 ---
 // Diary Editor component
-const today = new Date().toLocaleDateString("es-ES", {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
 ---
 
 <div
@@ -33,7 +27,11 @@ const today = new Date().toLocaleDateString("es-ES", {
       >
       <div>
         <h2 class="font-semibold text-foreground">Entrada de Hoy</h2>
-        <p class="text-xs text-muted-foreground capitalize">{today}</p>
+        <input
+          id="diary-date"
+          type="date"
+          class="bg-transparent border-none text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary rounded px-1"
+        />
       </div>
     </div>
     <button
@@ -80,9 +78,16 @@ const today = new Date().toLocaleDateString("es-ES", {
   const textarea = document.getElementById(
     "diary-content",
   ) as HTMLTextAreaElement;
+  const dateInput = document.getElementById("diary-date") as HTMLInputElement;
   const charCount = document.getElementById("char-count");
   const readTime = document.getElementById("read-time");
   const saveBtn = document.getElementById("save-btn");
+
+  // Set default date to today
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
+  }
 
   textarea?.addEventListener("input", () => {
     const content = textarea.value;
@@ -96,6 +101,7 @@ const today = new Date().toLocaleDateString("es-ES", {
 
   saveBtn?.addEventListener("click", async () => {
     const content = textarea?.value;
+    const selectedDate = dateInput?.value;
     if (!content) return;
 
     // Change button state to loading
@@ -104,7 +110,7 @@ const today = new Date().toLocaleDateString("es-ES", {
     saveBtn.setAttribute("disabled", "true");
 
     try {
-      await saveDiaryEntry(content);
+      await saveDiaryEntry(content, selectedDate);
       alert("¡Entrada guardada exitosamente!");
       textarea.value = ""; // Clear textarea if desired, or keep it
       // Reset counters

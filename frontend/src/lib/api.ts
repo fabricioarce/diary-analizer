@@ -40,11 +40,11 @@ export async function getDiaryEntry(date: string) {
   return handleResponse(res);
 }
 
-export async function saveDiaryEntry(text: string) {
+export async function saveDiaryEntry(text: string, date?: string) {
   const res = await fetch(`${API_URL}/diary/save`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, date }),
   });
   return handleResponse(res);
 }

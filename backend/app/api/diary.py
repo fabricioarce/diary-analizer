@@ -11,10 +11,11 @@ router = APIRouter()
 
 class DiaryEntry(BaseModel):
     text: str
+    date: str = None
 
 @router.post("/save")
 def save_diary(entry: DiaryEntry, background_tasks: BackgroundTasks):
-    date_str = save_entry(entry.text)
+    date_str = save_entry(entry.text, entry.date)
     background_tasks.add_task(process_diary_entry, entry.text, date_str)
     return {"status": "ok", "message": "Entry saved and processing started"}
 

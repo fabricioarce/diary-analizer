@@ -17,11 +17,17 @@ logger = logging.getLogger(__name__)
 DIARY_PATH = Path("data/diary/entries")
 DIARY_PATH.mkdir(parents=True, exist_ok=True)
 
-def save_entry(text: str) -> str:
-    today = date.today().isoformat()
-    path = DIARY_PATH / f"{today}.md"
+def save_entry(text: str, date_str: str = None) -> str:
+    if date_str:
+        # User defined date
+        save_date = date_str
+    else:
+        # Default to today
+        save_date = date.today().isoformat()
+        
+    path = DIARY_PATH / f"{save_date}.md"
     path.write_text(text, encoding="utf-8")
-    return today
+    return save_date
 
 def process_diary_entry(text: str, date_str: str):
     """

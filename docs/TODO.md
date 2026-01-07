@@ -19,9 +19,9 @@
 ## Frontend
 - [x] Crear layout base (mockup)
 - [x] Editor de diario funcional
-- [ ] Escojer fecha de entrada
+- [x] Escojer fecha de entrada
 - [x] Chat conectado al backend
-- [ ] Visualización de emociones
+- [x] Visualización de emociones
 - [x] Búsqueda y filtros
 - [ ] Exportar entradas
 - [ ] Improve markdown rendering

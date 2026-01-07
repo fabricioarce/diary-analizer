@@ -278,7 +278,7 @@ def crear_chunks_enriquecidos(
     texto: str,
     analisis: Dict[str, Any],
     entry_id: str,
-    modelo: str = "liquidai/lfm2-2.6b-exp@f16"
+    modelo: str = "qwen/qwen3-32b"
 ) -> List[Dict[str, Any]]:
     """
     Crea chunks semánticos enriquecidos usando IA con fallback heurístico.
@@ -474,7 +474,7 @@ def leer_archivo_diario(ruta_archivo: str) -> str:
         raise FileReadError(f"Error inesperado al leer el archivo: {e}")
 
 
-def analizar_con_llm(contenido: str, modelo: str = "liquidai/lfm2-2.6b-exp@f16") -> str:
+def analizar_con_llm(contenido: str, modelo: str = "qwen/qwen3-32b") -> str:
     """
     Analiza el contenido del diario usando LM Studio.
     
@@ -551,7 +551,7 @@ def analizar_con_llm(contenido: str, modelo: str = "liquidai/lfm2-2.6b-exp@f16")
 
 def chunkear_con_llm(
     texto: str,
-    modelo: str = "liquidai/lfm2-2.6b-exp@f16"
+    modelo: str = "qwen/qwen3-32b"
 ) -> List[Dict[str, str]]:
     """
     Usa un LLM para dividir el texto en chunks semánticos conscientes.

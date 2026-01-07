@@ -4,7 +4,7 @@
 - [x] Agregar middleware CORS para frontend (Astro)
 - [ ] Manejo correcto de errores HTTP (404, 400, 500)
 - [ ] Validación de entradas (texto vacío, tamaño máximo)
-- [ ] Actualizar embeddings automáticamente al guardar una entrada
+- [x] Actualizar embeddings automáticamente al guardar una entrada
 - [ ] Centralizar configuración (paths, env vars)
 
 ## Backend (Media prioridad)
